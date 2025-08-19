@@ -73,8 +73,11 @@ export default function SkillsPanel() {
 
   const completeTraining = async (skillType: SkillType) => {
     try {
+      console.log('開始訓練技能:', skillType)
+      
       // 調用後端 API
       const response = await apiClient.trainSkill(skillType)
+      console.log('技能訓練響應:', response)
       
       // 更新前端狀態
       dispatch(addExperience({ 

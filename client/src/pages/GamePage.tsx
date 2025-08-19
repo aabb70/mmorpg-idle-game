@@ -25,6 +25,9 @@ export default function GamePage() {
 
   useEffect(() => {
     if (user) {
+      // 載入用戶完整資料
+      loadUserData()
+      
       // 連接 Socket.io
       socketManager.connect()
       socketManager.joinGame({ username: user.username })
@@ -43,6 +46,26 @@ export default function GamePage() {
       socketManager.disconnect()
     }
   }, [user])
+
+  const loadUserData = async () => {
+    try {
+      const response = await fetch('https://mmorpg-idle-game.onrender.com/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('載入用戶資料:', data)
+        // 這裡可以更新 Redux store 的技能和背包資料
+      } else {
+        console.error('載入用戶資料失敗:', response.status)
+      }
+    } catch (error) {
+      console.error('載入用戶資料錯誤:', error)
+    }
+  }
 
   const renderCurrentView = () => {
     switch (currentView) {
