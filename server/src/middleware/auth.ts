@@ -5,7 +5,7 @@ interface JwtPayload {
   userId: string
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -15,7 +15,8 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
   jwt.verify(token, process.env.JWT_SECRET || 'default-secret', (err, payload) => {
     if (err) {
-      return res.status(403).json({ message: 'Token 無效' })
+      res.status(403).json({ message: 'Token 無效' })
+      return
     }
 
     const { userId } = payload as JwtPayload

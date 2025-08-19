@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
 
-export const getItems = async (req: Request, res: Response) => {
+export const getItems = async (req: Request, res: Response): Promise<void> => {
   try {
     const items = await prisma.item.findMany({
       orderBy: [
@@ -18,7 +18,7 @@ export const getItems = async (req: Request, res: Response) => {
   }
 }
 
-export const getRecipes = async (req: Request, res: Response) => {
+export const getRecipes = async (req: Request, res: Response): Promise<void> => {
   try {
     const recipes = await prisma.recipe.findMany({
       include: {
@@ -42,7 +42,7 @@ export const getRecipes = async (req: Request, res: Response) => {
   }
 }
 
-export const trainSkill = async (req: Request, res: Response) => {
+export const trainSkill = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
     const { skillType } = req.body
@@ -163,7 +163,7 @@ export const trainSkill = async (req: Request, res: Response) => {
   }
 }
 
-export const craftItem = async (req: Request, res: Response) => {
+export const craftItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
     const { recipeId } = req.body

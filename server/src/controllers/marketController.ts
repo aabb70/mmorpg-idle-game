@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
 
-export const getMarketListings = async (req: Request, res: Response) => {
+export const getMarketListings = async (req: Request, res: Response): Promise<void> => {
   try {
     const listings = await prisma.marketListing.findMany({
       include: {
@@ -36,7 +36,7 @@ export const getMarketListings = async (req: Request, res: Response) => {
   }
 }
 
-export const getMyListings = async (req: Request, res: Response) => {
+export const getMyListings = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
 
@@ -68,7 +68,7 @@ export const getMyListings = async (req: Request, res: Response) => {
   }
 }
 
-export const createListing = async (req: Request, res: Response) => {
+export const createListing = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
     const { itemId, quantity, pricePerUnit } = req.body
@@ -154,7 +154,7 @@ export const createListing = async (req: Request, res: Response) => {
   }
 }
 
-export const removeListing = async (req: Request, res: Response) => {
+export const removeListing = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
     const { listingId } = req.params
@@ -216,7 +216,7 @@ export const removeListing = async (req: Request, res: Response) => {
   }
 }
 
-export const purchaseItem = async (req: Request, res: Response) => {
+export const purchaseItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
     const { listingId, quantity } = req.body

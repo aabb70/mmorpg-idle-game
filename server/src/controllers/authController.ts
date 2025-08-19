@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../index.js'
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body
 
@@ -77,7 +77,7 @@ export const register = async (req: Request, res: Response) => {
   }
 }
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, password } = req.body
 
@@ -121,7 +121,7 @@ export const login = async (req: Request, res: Response) => {
   }
 }
 
-export const getProfile = async (req: Request, res: Response) => {
+export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
 
