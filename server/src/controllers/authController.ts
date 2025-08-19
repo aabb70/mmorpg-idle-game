@@ -155,7 +155,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         gold: user.gold,
       },
       skills: user.skills,
-      inventory: user.inventory.map(item => ({
+      inventory: user.inventory.map((item: any) => ({
         id: item.item.id,
         name: item.item.name,
         quantity: item.quantity,

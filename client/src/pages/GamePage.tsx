@@ -118,13 +118,29 @@ export default function GamePage() {
   }
 
   const handleLogout = () => {
+    console.log('開始登出流程')
+    
+    // 清除 API 客戶端 token
+    import('../utils/api').then(({ apiClient }) => {
+      apiClient.clearToken()
+    })
+    
     // 清除 localStorage
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
+    console.log('已清除 localStorage')
+    
     // 清除 Redux 狀態
     dispatch(logout())
+    console.log('已清除 Redux 狀態')
+    
+    // 斷開 Socket 連接
+    socketManager.disconnect()
+    console.log('已斷開 Socket 連接')
+    
     // 導航到登入頁面
     navigate('/')
+    console.log('已導航到登入頁面')
   }
 
   const renderCurrentView = () => {
@@ -147,22 +163,24 @@ export default function GamePage() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             MMORPG 放置遊戲
           </Typography>
-          {user && (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Chip label={`${user.username}`} color="secondary" />
-              <Chip label={`等級 ${user.level}`} color="primary" />
-              <Chip label={`金幣 ${user.gold}`} sx={{ backgroundColor: '#FFD700' }} />
-              <Button 
-                variant="outlined" 
-                color="inherit" 
-                size="small"
-                onClick={handleLogout}
-                sx={{ color: 'white', borderColor: 'white' }}
-              >
-                登出
-              </Button>
-            </Box>
-          )}
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {user && (
+              <>
+                <Chip label={`${user.username}`} color="secondary" />
+                <Chip label={`等級 ${user.level}`} color="primary" />
+                <Chip label={`金幣 ${user.gold}`} sx={{ backgroundColor: '#FFD700' }} />
+              </>
+            )}
+            <Button 
+              variant="outlined" 
+              color="inherit" 
+              size="small"
+              onClick={handleLogout}
+              sx={{ color: 'white', borderColor: 'white' }}
+            >
+              {user ? '登出' : '清除資料'}
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 

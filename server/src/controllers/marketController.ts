@@ -17,7 +17,7 @@ export const getMarketListings = async (req: Request, res: Response): Promise<vo
       }
     })
 
-    const formattedListings = listings.map(listing => ({
+    const formattedListings = listings.map((listing: any) => ({
       id: listing.id,
       sellerId: listing.sellerId,
       sellerName: listing.seller.username,
@@ -50,7 +50,7 @@ export const getMyListings = async (req: Request, res: Response): Promise<void> 
       }
     })
 
-    const formattedListings = listings.map(listing => ({
+    const formattedListings = listings.map((listing: any) => ({
       id: listing.id,
       sellerId: listing.sellerId,
       itemId: listing.itemId,
@@ -267,7 +267,7 @@ export const purchaseItem = async (req: Request, res: Response): Promise<void> =
     }
 
     // 執行交易
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 扣除買家金幣
       await tx.user.update({
         where: { id: userId },

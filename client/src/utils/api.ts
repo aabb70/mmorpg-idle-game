@@ -7,9 +7,11 @@ class ApiClient {
   constructor() {
     this.baseURL = API_BASE_URL
     this.token = localStorage.getItem('auth_token')
+    console.log('ApiClient 初始化，token:', this.token ? '已設定' : '未設定')
   }
 
   setToken(token: string) {
+    console.log('設定新的 token:', token ? '已設定' : '未設定')
     this.token = token
     localStorage.setItem('auth_token', token)
   }
@@ -31,13 +33,25 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
+    console.log(`API 請求: ${endpoint}`, {
+      url,
+      hasToken: !!this.token,
+      headers: { ...headers, Authorization: this.token ? '[已設定]' : '[未設定]' }
+    })
+
     const response = await fetch(url, {
       ...options,
       headers,
     })
 
+    console.log(`API 響應: ${endpoint}`, {
+      status: response.status,
+      ok: response.ok
+    })
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.error(`API 錯誤: ${endpoint}`, errorData)
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
     }
 

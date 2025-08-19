@@ -46,11 +46,18 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
+      console.log('開始登入流程:', { username, password: '***' })
       const response = await apiClient.login({ username, password })
+      console.log('登入響應:', response)
+      
       apiClient.setToken(response.token)
       // 保存用戶資料到 localStorage
       localStorage.setItem('user_data', JSON.stringify(response.user))
+      console.log('已保存用戶資料到 localStorage')
+      
       dispatch(loginSuccess(response.user))
+      console.log('已更新 Redux 狀態')
+      
       navigate('/game')
     } catch (error) {
       console.error('登入失敗:', error)
