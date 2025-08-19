@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: mmorpg-idle-server
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mmorpg-idle-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: mmorpg-idle-db
+    databaseName: mmorpg_idle_game
+    user: postgres

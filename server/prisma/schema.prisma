@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // 遊戲相關
+  level     Int @default(1)
+  experience Int @default(0)
+  gold      Int @default(100)
+  
+  // 技能等級
+  skills    Skill[]
+  
+  // 物品庫存
+  inventory InventoryItem[]
+  
+  // 市場交易
+  marketListings MarketListing[]
+  purchaseOrders PurchaseOrder[]
+  
+  @@map("users")
+}
+
+model Skill {
+  id       String @id @default(cuid())
+  userId   String
+  skillType SkillType
+  level    Int @default(1)
+  experience Int @default(0)
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, skillType])
+  @@map("skills")
+}
+
+model Item {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  itemType    ItemType
+  rarity      Rarity @default(COMMON)
+  baseValue   Int @default(0)
+  
+  // 製作需求
+  recipes     Recipe[]
+  recipeIngredients RecipeIngredient[]
+  
+  // 庫存項目
+  inventoryItems InventoryItem[]
+  marketListings MarketListing[]
+  
+  @@map("items")
+}
+
+model Recipe {
+  id          String @id @default(cuid())
+  itemId      String
+  skillType   SkillType
+  skillLevel  Int @default(1)
+  
+  item        Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+  
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id       String @id @default(cuid())
+  recipeId String
+  itemId   String
+  quantity Int
+  
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  @@map("recipe_ingredients")
+}
+
+model InventoryItem {
+  id       String @id @default(cuid())
+  userId   String
+  itemId   String
+  quantity Int
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, itemId])
+  @@map("inventory_items")
+}
+
+model MarketListing {
+  id        String @id @default(cuid())
+  sellerId  String
+  itemId    String
+  quantity  Int
+  pricePerUnit Int
+  createdAt DateTime @default(now())
+  
+  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  @@map("market_listings")
+}
+
+model PurchaseOrder {
+  id         String @id @default(cuid())
+  buyerId    String
+  listingId  String
+  quantity   Int
+  totalPrice Int
+  createdAt  DateTime @default(now())
+  
+  buyer User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  
+  @@map("purchase_orders")
+}
+
+enum SkillType {
+  MINING     // 採礦
+  LOGGING    // 伐木
+  FISHING    // 釣魚
+  FORAGING   // 採集
+  SMITHING   // 鍛造
+  TAILORING  // 裁縫
+  COOKING    // 廚師
+  ALCHEMY    // 煉金
+  CRAFTING   // 工藝
+}
+
+enum ItemType {
+  MATERIAL   // 原材料
+  TOOL       // 工具
+  EQUIPMENT  // 裝備
+  CONSUMABLE // 消耗品
+  MISC       // 雜項
+}
+
+enum Rarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
