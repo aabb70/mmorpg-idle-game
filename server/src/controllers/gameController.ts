@@ -101,54 +101,72 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
     // 可能獲得材料 (根據技能類型)
     let itemsGained: any[] = []
     if (Math.random() < 0.3) { // 30% 機率獲得物品
-      const materialItems = await prisma.item.findMany({
-        where: {
-          itemType: 'MATERIAL',
-          // 根據技能類型選擇對應的材料
-        }
-      })
+      // 根據技能類型選擇對應的材料
+      const skillMaterials: Record<string, string[]> = {
+        'MINING': ['銅礦石', '鐵礦石', '金礦石'],
+        'LOGGING': ['普通木材', '硬木'],
+        'FISHING': ['小魚', '大魚'],
+        'FORAGING': ['草藥', '魔法草'],
+        'SMITHING': ['銅錘', '鐵錘', '銅劍', '鐵劍'],
+        'TAILORING': ['布衣', '皮甲'],
+        'COOKING': ['麵包'],
+        'ALCHEMY': ['治療藥劑'],
+        'CRAFTING': ['銅錘', '鐵錘'],
+      }
 
-      if (materialItems.length > 0) {
-        const randomItem = materialItems[Math.floor(Math.random() * materialItems.length)]
-        const quantity = Math.floor(Math.random() * 3) + 1
-
-        // 添加到背包
-        const existingInventoryItem = await prisma.inventoryItem.findUnique({
+      const possibleMaterials = skillMaterials[skillType] || []
+      
+      if (possibleMaterials.length > 0) {
+        const randomMaterialName = possibleMaterials[Math.floor(Math.random() * possibleMaterials.length)]
+        
+        const materialItem = await prisma.item.findFirst({
           where: {
-            userId_itemId: {
-              userId,
-              itemId: randomItem.id
-            }
+            name: randomMaterialName,
+            itemType: 'MATERIAL'
           }
         })
 
-        if (existingInventoryItem) {
-          await prisma.inventoryItem.update({
+        if (materialItem) {
+          const quantity = Math.floor(Math.random() * 3) + 1
+
+          // 添加到背包
+          const existingInventoryItem = await prisma.inventoryItem.findUnique({
             where: {
               userId_itemId: {
                 userId,
-                itemId: randomItem.id
+                itemId: materialItem.id
               }
-            },
-            data: {
-              quantity: existingInventoryItem.quantity + quantity
             }
           })
-        } else {
-          await prisma.inventoryItem.create({
-            data: {
-              userId,
-              itemId: randomItem.id,
-              quantity
-            }
+
+          if (existingInventoryItem) {
+            await prisma.inventoryItem.update({
+              where: {
+                userId_itemId: {
+                  userId,
+                  itemId: materialItem.id
+                }
+              },
+              data: {
+                quantity: existingInventoryItem.quantity + quantity
+              }
+            })
+          } else {
+            await prisma.inventoryItem.create({
+              data: {
+                userId,
+                itemId: materialItem.id,
+                quantity
+              }
+            })
+          }
+
+          itemsGained.push({
+            id: materialItem.id,
+            name: materialItem.name,
+            quantity
           })
         }
-
-        itemsGained.push({
-          id: randomItem.id,
-          name: randomItem.name,
-          quantity
-        })
       }
     }
 
