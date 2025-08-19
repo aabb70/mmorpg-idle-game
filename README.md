@@ -116,4 +116,4 @@ npm run dev:server  # 後端 (http://localhost:5000)
 
 ## 貢獻
 
-歡迎提交 Issue 和 Pull Request 來幫助改善這個遊戲！
+歡迎提交 Issue 和 Pull Request 來幫助改善這個遊戲！# 觸發部署
