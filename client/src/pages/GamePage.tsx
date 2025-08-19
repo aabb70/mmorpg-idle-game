@@ -19,6 +19,7 @@ import { restoreAuth, logout } from '../store/slices/authSlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
+import NotificationSystem from '../components/NotificationSystem'
 import { socketManager } from '../utils/socket'
 import { useNavigate } from 'react-router-dom'
 
@@ -158,6 +159,9 @@ export default function GamePage() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
+      {/* 通知系統 - 全局顯示 */}
+      <NotificationSystem />
+      
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
