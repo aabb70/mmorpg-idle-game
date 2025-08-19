@@ -80,6 +80,68 @@ app.post('/api/admin/init-materials', async (req, res) => {
   }
 })
 
+// 緊急清理材料系統 API (無需認證)
+app.post('/api/emergency-clean-materials', async (req, res) => {
+  try {
+    console.log('🚨 緊急清理舊材料系統...')
+    
+    // 清理舊的材料和相關數據
+    await prisma.$transaction(async (tx: any) => {
+      // 刪除所有背包中的舊材料物品
+      await tx.inventoryItem.deleteMany({
+        where: {
+          item: {
+            itemType: 'MATERIAL'
+          }
+        }
+      })
+      
+      // 刪除所有配方成分
+      await tx.recipeIngredient.deleteMany({})
+      
+      // 刪除所有配方
+      await tx.recipe.deleteMany({})
+      
+      // 刪除所有物品標籤關聯
+      await tx.itemTag.deleteMany({})
+      
+      // 刪除所有舊物品（材料、食物、藥劑等）
+      await tx.item.deleteMany({
+        where: {
+          OR: [
+            { itemType: 'MATERIAL' },
+            { itemType: 'FOOD' },
+            { itemType: 'POTION' },
+            { itemType: 'EQUIPMENT' }
+          ]
+        }
+      })
+      
+      // 刪除所有標籤
+      await tx.tag.deleteMany({})
+      
+      console.log('🗑️ 舊數據清理完成')
+    })
+    
+    // 重新初始化材料系統
+    console.log('🔄 重新初始化材料系統...')
+    const { seedMaterialSystem } = await import('./seeds/materialSystem.js')
+    await seedMaterialSystem(prisma)
+    
+    console.log('✅ 材料系統重新初始化完成')
+    
+    res.json({
+      success: true,
+      message: '緊急清理完成，材料系統已重新初始化',
+      timestamp: new Date().toISOString()
+    })
+    
+  } catch (error: any) {
+    console.error('❌ 緊急清理材料系統錯誤:', error)
+    res.status(500).json({ success: false, message: '緊急清理失敗', error: error.message })
+  }
+})
+
 // 應用路由
 app.use('/api/auth', authRoutes)
 app.use('/api/game', gameRoutes)
