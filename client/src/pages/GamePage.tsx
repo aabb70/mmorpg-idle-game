@@ -13,6 +13,8 @@ import {
 } from '@mui/material'
 import { RootState } from '../store/store'
 import { setCurrentView } from '../store/slices/gameSlice'
+import { setSkills } from '../store/slices/skillSlice'
+import { setItems } from '../store/slices/inventorySlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
@@ -49,18 +51,39 @@ export default function GamePage() {
 
   const loadUserData = async () => {
     try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        console.error('沒有找到認證 token')
+        return
+      }
+
+      console.log('開始載入用戶資料...')
       const response = await fetch('https://mmorpg-idle-game.onrender.com/api/auth/profile', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${token}`
         }
       })
       
       if (response.ok) {
         const data = await response.json()
-        console.log('載入用戶資料:', data)
-        // 這裡可以更新 Redux store 的技能和背包資料
+        console.log('載入用戶資料成功:', data)
+        
+        // 更新技能資料
+        if (data.skills && data.skills.length > 0) {
+          dispatch(setSkills(data.skills))
+          console.log('技能資料已更新到 Redux store')
+        }
+        
+        // 更新背包資料
+        if (data.inventory && data.inventory.length > 0) {
+          dispatch(setItems(data.inventory))
+          console.log('背包資料已更新到 Redux store')
+        }
+        
       } else {
         console.error('載入用戶資料失敗:', response.status)
+        const errorData = await response.text()
+        console.error('錯誤詳情:', errorData)
       }
     } catch (error) {
       console.error('載入用戶資料錯誤:', error)

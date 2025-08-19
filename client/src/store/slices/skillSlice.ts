@@ -66,8 +66,21 @@ const skillSlice = createSlice({
         skill.maxExperience = Math.floor(skill.maxExperience * 1.2)
       }
     },
+    setSkills: (state, action: PayloadAction<any[]>) => {
+      action.payload.forEach((skill: any) => {
+        const skillType = skill.skillType as SkillType
+        if (state.skills[skillType]) {
+          state.skills[skillType] = {
+            skillType,
+            level: skill.level,
+            experience: skill.experience,
+            maxExperience: 100 * Math.pow(1.2, skill.level - 1)
+          }
+        }
+      })
+    },
   },
 })
 
-export const { setActiveSkill, startTraining, stopTraining, addExperience } = skillSlice.actions
+export const { setActiveSkill, startTraining, stopTraining, addExperience, setSkills } = skillSlice.actions
 export default skillSlice.reducer
