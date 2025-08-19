@@ -10,7 +10,8 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   const token = authHeader && authHeader.split(' ')[1]
 
   if (!token) {
-    return res.status(401).json({ message: '需要登入權限' })
+    res.status(401).json({ message: '需要登入權限' })
+    return
   }
 
   jwt.verify(token, process.env.JWT_SECRET || 'default-secret', (err, payload) => {

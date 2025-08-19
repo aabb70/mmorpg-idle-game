@@ -18,7 +18,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (existingUser) {
-      return res.status(400).json({ message: '用戶名或電子郵件已存在' })
+      res.status(400).json({ message: '用戶名或電子郵件已存在' })
+      return
     }
 
     // 加密密碼
@@ -87,13 +88,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (!user) {
-      return res.status(400).json({ message: '用戶名或密碼錯誤' })
+      res.status(400).json({ message: '用戶名或密碼錯誤' })
+      return
     }
 
     // 驗證密碼
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
-      return res.status(400).json({ message: '用戶名或密碼錯誤' })
+      res.status(400).json({ message: '用戶名或密碼錯誤' })
+      return
     }
 
     // 生成 JWT
@@ -138,7 +141,8 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
     })
 
     if (!user) {
-      return res.status(404).json({ message: '用戶不存在' })
+      res.status(404).json({ message: '用戶不存在' })
+      return
     }
 
     res.json({

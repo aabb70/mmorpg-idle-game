@@ -74,7 +74,8 @@ export const createListing = async (req: Request, res: Response): Promise<void> 
     const { itemId, quantity, pricePerUnit } = req.body
 
     if (!itemId || !quantity || !pricePerUnit || quantity <= 0 || pricePerUnit <= 0) {
-      return res.status(400).json({ message: '無效的商品資訊' })
+      res.status(400).json({ message: '無效的商品資訊' })
+      return
     }
 
     // 檢查用戶是否擁有足夠的物品
@@ -88,7 +89,8 @@ export const createListing = async (req: Request, res: Response): Promise<void> 
     })
 
     if (!inventoryItem || inventoryItem.quantity < quantity) {
-      return res.status(400).json({ message: '物品數量不足' })
+      res.status(400).json({ message: '物品數量不足' })
+      return
     }
 
     // 從背包中移除物品
@@ -165,11 +167,13 @@ export const removeListing = async (req: Request, res: Response): Promise<void> 
     })
 
     if (!listing) {
-      return res.status(404).json({ message: '商品不存在' })
+      res.status(404).json({ message: '商品不存在' })
+      return
     }
 
     if (listing.sellerId !== userId) {
-      return res.status(403).json({ message: '沒有權限操作此商品' })
+      res.status(403).json({ message: '沒有權限操作此商品' })
+      return
     }
 
     // 將物品歸還到背包
@@ -222,7 +226,8 @@ export const purchaseItem = async (req: Request, res: Response): Promise<void> =
     const { listingId, quantity } = req.body
 
     if (!listingId || !quantity || quantity <= 0) {
-      return res.status(400).json({ message: '無效的購買資訊' })
+      res.status(400).json({ message: '無效的購買資訊' })
+      return
     }
 
     // 獲取商品列表
@@ -234,15 +239,18 @@ export const purchaseItem = async (req: Request, res: Response): Promise<void> =
     })
 
     if (!listing) {
-      return res.status(404).json({ message: '商品不存在' })
+      res.status(404).json({ message: '商品不存在' })
+      return
     }
 
     if (listing.sellerId === userId) {
-      return res.status(400).json({ message: '不能購買自己的商品' })
+      res.status(400).json({ message: '不能購買自己的商品' })
+      return
     }
 
     if (quantity > listing.quantity) {
-      return res.status(400).json({ message: '購買數量超過可用數量' })
+      res.status(400).json({ message: '購買數量超過可用數量' })
+      return
     }
 
     // 計算總價
@@ -254,7 +262,8 @@ export const purchaseItem = async (req: Request, res: Response): Promise<void> =
     })
 
     if (!buyer || buyer.gold < totalPrice) {
-      return res.status(400).json({ message: '金幣不足' })
+      res.status(400).json({ message: '金幣不足' })
+      return
     }
 
     // 執行交易

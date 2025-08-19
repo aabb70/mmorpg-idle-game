@@ -48,7 +48,8 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
     const { skillType } = req.body
 
     if (!skillType) {
-      return res.status(400).json({ message: '需要指定技能類型' })
+      res.status(400).json({ message: '需要指定技能類型' })
+      return
     }
 
     // 獲取用戶技能
@@ -62,7 +63,8 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
     })
 
     if (!skill) {
-      return res.status(404).json({ message: '技能不存在' })
+      res.status(404).json({ message: '技能不存在' })
+      return
     }
 
     // 計算經驗獲得 (基礎值 + 隨機值)
@@ -182,7 +184,8 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (!recipe) {
-      return res.status(404).json({ message: '配方不存在' })
+      res.status(404).json({ message: '配方不存在' })
+      return
     }
 
     // 檢查技能等級
@@ -196,7 +199,8 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (!skill || skill.level < recipe.skillLevel) {
-      return res.status(400).json({ message: '技能等級不足' })
+      res.status(400).json({ message: '技能等級不足' })
+      return
     }
 
     // 檢查材料是否足夠
@@ -211,9 +215,10 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
       })
 
       if (!inventoryItem || inventoryItem.quantity < ingredient.quantity) {
-        return res.status(400).json({ 
+        res.status(400).json({ 
           message: `材料不足: ${ingredient.item.name}` 
         })
+        return
       }
     }
 
