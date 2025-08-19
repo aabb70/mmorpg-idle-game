@@ -75,7 +75,7 @@ export default function LoginPage() {
           MMORPG 放置遊戲
         </Typography>
         
-        <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered>
+        <Tabs value={tab} onChange={(_, newValue) => setTab(newValue)} centered>
           <Tab label="登入" />
           <Tab label="註冊" />
         </Tabs>

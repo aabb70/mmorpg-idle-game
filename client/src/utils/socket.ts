@@ -4,7 +4,7 @@ const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 class SocketManager {
   private socket: Socket | null = null
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, ((...args: any[]) => void)[]> = new Map()
 
   connect(token?: string) {
     if (this.socket?.connected) {
@@ -48,25 +48,25 @@ class SocketManager {
     }
   }
 
-  on(event: string, callback: Function) {
+  on(event: string, callback: (...args: any[]) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)?.push(callback)
 
     if (this.socket?.connected) {
-      this.socket.on(event, callback as any)
+      this.socket.on(event, callback)
     }
   }
 
-  off(event: string, callback?: Function) {
+  off(event: string, callback?: (...args: any[]) => void) {
     if (callback) {
       const callbacks = this.listeners.get(event) || []
       const index = callbacks.indexOf(callback)
       if (index > -1) {
         callbacks.splice(index, 1)
       }
-      this.socket?.off(event, callback as any)
+      this.socket?.off(event, callback)
     } else {
       this.listeners.delete(event)
       this.socket?.off(event)

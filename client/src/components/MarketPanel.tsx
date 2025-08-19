@@ -53,7 +53,7 @@ export default function MarketPanel() {
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
+        <Tabs value={tab} onChange={(_, newValue) => setTab(newValue)}>
           <Tab label="瀏覽市場" />
           <Tab label="我的商品" />
         </Tabs>
