@@ -103,6 +103,28 @@ class ApiClient {
     })
   }
 
+  // 目標訓練相關
+  async getAvailableItems(skillType: string) {
+    return this.request(`/game/available-items/${skillType}`)
+  }
+
+  async startTargetedTraining(trainingData: { skillType: string; targetItemId: string; repetitions: number }) {
+    return this.request('/game/start-targeted-training', {
+      method: 'POST',
+      body: JSON.stringify(trainingData),
+    })
+  }
+
+  async stopTargetedTraining() {
+    return this.request('/game/stop-targeted-training', {
+      method: 'POST',
+    })
+  }
+
+  async getOfflineProgress() {
+    return this.request('/game/offline-progress')
+  }
+
   // 市場相關
   async getMarketListings() {
     return this.request('/market/listings')

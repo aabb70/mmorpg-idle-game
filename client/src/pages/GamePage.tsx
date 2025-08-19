@@ -19,6 +19,7 @@ import { restoreAuth, logout } from '../store/slices/authSlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
+import TargetedTrainingPanel from '../components/TargetedTrainingPanel'
 import NotificationSystem from '../components/NotificationSystem'
 import { socketManager } from '../utils/socket'
 import { useNavigate } from 'react-router-dom'
@@ -148,6 +149,8 @@ export default function GamePage() {
     switch (currentView) {
       case 'skills':
         return <SkillsPanel />
+      case 'targeted-training':
+        return <TargetedTrainingPanel />
       case 'inventory':
         return <InventoryPanel />
       case 'market':
@@ -198,6 +201,12 @@ export default function GamePage() {
                   variant={currentView === 'skills' ? 'contained' : 'outlined'}
                 >
                   技能
+                </Button>
+                <Button
+                  onClick={() => dispatch(setCurrentView('targeted-training'))}
+                  variant={currentView === 'targeted-training' ? 'contained' : 'outlined'}
+                >
+                  目標訓練
                 </Button>
                 <Button
                   onClick={() => dispatch(setCurrentView('inventory'))}
