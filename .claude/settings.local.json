@@ -25,7 +25,8 @@
       "WebFetch(domain:mmorpg-idle-game.onrender.com)",
       "Bash(git rm:*)",
       "WebFetch(domain:mmorpg-idle-client.netlify.app)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(\"taskkill\" /pid 8376 /f)"
     ],
     "deny": [],
     "ask": []

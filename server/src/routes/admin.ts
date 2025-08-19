@@ -6,7 +6,8 @@ import {
   giveItemToUser,
   updateUserSkills,
   deleteUser,
-  adminLogin 
+  adminLogin,
+  cleanAndReinitializeMaterials
 } from '../controllers/adminController.js'
 import { authenticateAdmin } from '../middleware/adminAuth.js'
 
@@ -27,5 +28,8 @@ router.delete('/users/:userId', deleteUser)
 
 // 物品管理
 router.post('/users/:userId/items', giveItemToUser)
+
+// 系統管理
+router.post('/clean-materials', cleanAndReinitializeMaterials)
 
 export default router

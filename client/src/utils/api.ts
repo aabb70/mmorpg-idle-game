@@ -89,12 +89,6 @@ class ApiClient {
     return this.request('/game/recipes')
   }
 
-  async trainSkill(skillType: string) {
-    return this.request('/game/train-skill', {
-      method: 'POST',
-      body: JSON.stringify({ skillType }),
-    })
-  }
 
   async craftItem(recipeId: string) {
     return this.request('/game/craft', {

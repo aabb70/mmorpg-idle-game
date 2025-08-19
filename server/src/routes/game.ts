@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { 
   getItems, 
   getRecipes, 
-  trainSkill, 
   craftItem, 
   startTargetedTraining, 
   stopTargetedTraining, 
@@ -18,7 +17,6 @@ router.use(authenticateToken)
 
 router.get('/items', getItems)
 router.get('/recipes', getRecipes)
-router.post('/train-skill', trainSkill)
 router.post('/craft', craftItem)
 
 // 目標導向訓練路由

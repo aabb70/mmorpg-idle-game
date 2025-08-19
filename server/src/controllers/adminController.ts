@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
 import jwt from 'jsonwebtoken'
+import { seedMaterialSystem } from '../seeds/materialSystem.js'
 
 // 簡單的管理員認證 (在生產環境中應使用更安全的方式)
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -238,5 +239,64 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('刪除用戶錯誤:', error)
     res.status(500).json({ message: '服務器錯誤' })
+  }
+}
+
+export const cleanAndReinitializeMaterials = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('🧹 開始清理舊材料系統...')
+    
+    // 清理舊的材料和相關數據
+    await prisma.$transaction(async (tx: any) => {
+      // 刪除所有背包中的舊材料物品
+      await tx.inventoryItem.deleteMany({
+        where: {
+          item: {
+            itemType: 'MATERIAL'
+          }
+        }
+      })
+      
+      // 刪除所有配方成分
+      await tx.recipeIngredient.deleteMany({})
+      
+      // 刪除所有配方
+      await tx.recipe.deleteMany({})
+      
+      // 刪除所有物品標籤關聯
+      await tx.itemTag.deleteMany({})
+      
+      // 刪除所有舊物品（材料、食物、藥劑等）
+      await tx.item.deleteMany({
+        where: {
+          OR: [
+            { itemType: 'MATERIAL' },
+            { itemType: 'FOOD' },
+            { itemType: 'POTION' },
+            { itemType: 'EQUIPMENT' }
+          ]
+        }
+      })
+      
+      // 刪除所有標籤
+      await tx.tag.deleteMany({})
+      
+      console.log('🗑️ 舊數據清理完成')
+    })
+    
+    // 重新初始化材料系統
+    console.log('🔄 重新初始化材料系統...')
+    await seedMaterialSystem(prisma)
+    
+    console.log('✅ 材料系統重新初始化完成')
+    
+    res.json({
+      message: '材料系統已清理並重新初始化',
+      timestamp: new Date().toISOString()
+    })
+    
+  } catch (error) {
+    console.error('❌ 清理材料系統錯誤:', error)
+    res.status(500).json({ message: '清理材料系統失敗', error: error.message })
   }
 }
