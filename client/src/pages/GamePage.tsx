@@ -15,13 +15,15 @@ import { RootState } from '../store/store'
 import { setCurrentView } from '../store/slices/gameSlice'
 import { setSkills } from '../store/slices/skillSlice'
 import { setItems } from '../store/slices/inventorySlice'
-import { restoreAuth } from '../store/slices/authSlice'
+import { restoreAuth, logout } from '../store/slices/authSlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
 import { socketManager } from '../utils/socket'
+import { useNavigate } from 'react-router-dom'
 
 export default function GamePage() {
+  const navigate = useNavigate()
   const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
   const { currentView } = useSelector((state: RootState) => state.game)
@@ -115,6 +117,16 @@ export default function GamePage() {
     }
   }
 
+  const handleLogout = () => {
+    // 清除 localStorage
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_data')
+    // 清除 Redux 狀態
+    dispatch(logout())
+    // 導航到登入頁面
+    navigate('/')
+  }
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'skills':
@@ -136,10 +148,19 @@ export default function GamePage() {
             MMORPG 放置遊戲
           </Typography>
           {user && (
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <Chip label={`${user.username}`} color="secondary" />
               <Chip label={`等級 ${user.level}`} color="primary" />
               <Chip label={`金幣 ${user.gold}`} sx={{ backgroundColor: '#FFD700' }} />
+              <Button 
+                variant="outlined" 
+                color="inherit" 
+                size="small"
+                onClick={handleLogout}
+                sx={{ color: 'white', borderColor: 'white' }}
+              >
+                登出
+              </Button>
             </Box>
           )}
         </Toolbar>
