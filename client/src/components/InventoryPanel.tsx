@@ -1,4 +1,5 @@
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { useState } from 'react'
 import {
   Paper,
   Typography,
@@ -7,8 +8,17 @@ import {
   CardContent,
   Chip,
   Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
 } from '@mui/material'
 import { RootState } from '../store/store'
+import { addNotification } from '../store/slices/gameSlice'
+import { apiClient } from '../utils/api'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
@@ -18,8 +28,102 @@ const rarityColors = {
   LEGENDARY: '#FF9800',
 }
 
+// 物品預設價格（根據稀有度）
+const getDefaultPrice = (rarity: string, baseValue: number = 0) => {
+  const rarityMultipliers = {
+    COMMON: 1,
+    UNCOMMON: 2,
+    RARE: 5,
+    EPIC: 15,
+    LEGENDARY: 50
+  }
+  const multiplier = rarityMultipliers[rarity as keyof typeof rarityMultipliers] || 1
+  return Math.max(1, Math.floor((baseValue || 10) * multiplier))
+}
+
+interface SellDialogState {
+  isOpen: boolean
+  item: any | null
+  quantity: number
+  pricePerUnit: number
+  isLoading: boolean
+}
+
 export default function InventoryPanel() {
+  const dispatch = useDispatch()
   const { items } = useSelector((state: RootState) => state.inventory)
+  const [sellDialog, setSellDialog] = useState<SellDialogState>({
+    isOpen: false,
+    item: null,
+    quantity: 1,
+    pricePerUnit: 0,
+    isLoading: false
+  })
+
+  const handleSellClick = (item: any) => {
+    const defaultPrice = getDefaultPrice(item.rarity, item.baseValue || 10)
+    setSellDialog({
+      isOpen: true,
+      item,
+      quantity: 1,
+      pricePerUnit: defaultPrice,
+      isLoading: false
+    })
+  }
+
+  const handleSellConfirm = async () => {
+    if (!sellDialog.item) return
+
+    try {
+      setSellDialog(prev => ({ ...prev, isLoading: true }))
+      
+      await apiClient.createListing({
+        itemId: sellDialog.item.id,
+        quantity: sellDialog.quantity,
+        pricePerUnit: sellDialog.pricePerUnit
+      })
+
+      dispatch(addNotification(`成功上架 ${sellDialog.item.name} x${sellDialog.quantity}！`))
+      
+      // 重新載入背包資料
+      window.location.reload()
+      
+      handleSellCancel()
+      
+    } catch (error: any) {
+      console.error('上架失敗:', error)
+      dispatch(addNotification(error.message || '上架失敗，請稍後再試'))
+    } finally {
+      setSellDialog(prev => ({ ...prev, isLoading: false }))
+    }
+  }
+
+  const handleSellCancel = () => {
+    setSellDialog({
+      isOpen: false,
+      item: null,
+      quantity: 1,
+      pricePerUnit: 0,
+      isLoading: false
+    })
+  }
+
+  const handleQuantityChange = (value: number) => {
+    const maxQuantity = sellDialog.item?.quantity || 1
+    const newQuantity = Math.max(1, Math.min(value, maxQuantity))
+    setSellDialog(prev => ({ ...prev, quantity: newQuantity }))
+  }
+
+  const handlePriceChange = (value: number) => {
+    const newPrice = Math.max(1, value)
+    setSellDialog(prev => ({ ...prev, pricePerUnit: newPrice }))
+  }
+
+  const setDefaultPrice = () => {
+    if (!sellDialog.item) return
+    const defaultPrice = getDefaultPrice(sellDialog.item.rarity, sellDialog.item.baseValue || 10)
+    setSellDialog(prev => ({ ...prev, pricePerUnit: defaultPrice }))
+  }
 
   if (items.length === 0) {
     return (
@@ -61,14 +165,98 @@ export default function InventoryPanel() {
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   類型：{item.itemType}
                 </Typography>
-                <Typography variant="h6" color="primary">
+                <Typography variant="h6" color="primary" gutterBottom>
                   數量：{item.quantity}
                 </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  建議售價：{getDefaultPrice(item.rarity, item.baseValue || 10)} 金幣
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  fullWidth
+                  onClick={() => handleSellClick(item)}
+                >
+                  販售
+                </Button>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
+
+      {/* 販售對話框 */}
+      <Dialog 
+        open={sellDialog.isOpen} 
+        onClose={handleSellCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          販售物品：{sellDialog.item?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              庫存：{sellDialog.item?.quantity} 個
+            </Alert>
+
+            <TextField
+              fullWidth
+              label="數量"
+              type="number"
+              value={sellDialog.quantity}
+              onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+              inputProps={{ 
+                min: 1, 
+                max: sellDialog.item?.quantity || 1 
+              }}
+              margin="normal"
+            />
+
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
+              <TextField
+                fullWidth
+                label="單價（金幣）"
+                type="number"
+                value={sellDialog.pricePerUnit}
+                onChange={(e) => handlePriceChange(parseInt(e.target.value) || 1)}
+                inputProps={{ min: 1 }}
+                margin="normal"
+              />
+              <Button
+                variant="outlined"
+                onClick={setDefaultPrice}
+                sx={{ mt: 1, minWidth: 100 }}
+              >
+                建議價格
+              </Button>
+            </Box>
+
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+              <Typography variant="h6" color="primary">
+                總收入：{sellDialog.quantity * sellDialog.pricePerUnit} 金幣
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                每個 {sellDialog.pricePerUnit} 金幣 × {sellDialog.quantity} 個
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSellCancel}>
+            取消
+          </Button>
+          <Button 
+            onClick={handleSellConfirm} 
+            variant="contained"
+            disabled={sellDialog.isLoading || sellDialog.quantity <= 0 || sellDialog.pricePerUnit <= 0}
+          >
+            {sellDialog.isLoading ? '上架中...' : '確認上架'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }
