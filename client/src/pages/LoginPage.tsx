@@ -48,6 +48,8 @@ export default function LoginPage() {
     try {
       const response = await apiClient.login({ username, password })
       apiClient.setToken(response.token)
+      // 保存用戶資料到 localStorage
+      localStorage.setItem('user_data', JSON.stringify(response.user))
       dispatch(loginSuccess(response.user))
       navigate('/game')
     } catch (error) {
@@ -60,6 +62,8 @@ export default function LoginPage() {
     try {
       const response = await apiClient.register({ username, email, password })
       apiClient.setToken(response.token)
+      // 保存用戶資料到 localStorage
+      localStorage.setItem('user_data', JSON.stringify(response.user))
       dispatch(loginSuccess(response.user))
       navigate('/game')
     } catch (error) {

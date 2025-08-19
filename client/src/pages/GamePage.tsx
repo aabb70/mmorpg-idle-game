@@ -15,6 +15,7 @@ import { RootState } from '../store/store'
 import { setCurrentView } from '../store/slices/gameSlice'
 import { setSkills } from '../store/slices/skillSlice'
 import { setItems } from '../store/slices/inventorySlice'
+import { restoreAuth } from '../store/slices/authSlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
@@ -27,6 +28,28 @@ export default function GamePage() {
 
   useEffect(() => {
     console.log('GamePage useEffect 觸發，用戶狀態:', user)
+    
+    // 如果用戶狀態為空，嘗試從 localStorage 恢復
+    if (!user) {
+      const token = localStorage.getItem('auth_token')
+      const userData = localStorage.getItem('user_data')
+      
+      console.log('檢查 localStorage:', { token: !!token, userData: !!userData })
+      
+      if (token && userData) {
+        try {
+          const parsedUser = JSON.parse(userData)
+          console.log('從 localStorage 恢復用戶資料:', parsedUser)
+          dispatch(restoreAuth(parsedUser))
+          return // 等待下次 useEffect 觸發
+        } catch (error) {
+          console.error('解析用戶資料失敗:', error)
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user_data')
+        }
+      }
+    }
+    
     if (user) {
       console.log('用戶已登入，開始載入資料')
       // 載入用戶完整資料
@@ -49,7 +72,7 @@ export default function GamePage() {
     return () => {
       socketManager.disconnect()
     }
-  }, [user])
+  }, [user, dispatch])
 
   const loadUserData = async () => {
     try {
