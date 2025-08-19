@@ -18,7 +18,7 @@ const app = express()
 const server = createServer(app)
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://bespoke-lolly-ce99b9.netlify.app"],
     methods: ["GET", "POST"]
   }
 })
@@ -26,7 +26,12 @@ const io = new Server(server, {
 const prisma = new PrismaClient()
 const PORT = process.env.PORT || 5000
 
-app.use(cors())
+// 更新CORS設置以允許生產環境域名
+app.use(cors({
+  origin: ["http://localhost:3000", "https://bespoke-lolly-ce99b9.netlify.app"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
 app.use(express.json())
 
 // API 路由
