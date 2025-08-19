@@ -26,7 +26,9 @@ export default function GamePage() {
   const { currentView } = useSelector((state: RootState) => state.game)
 
   useEffect(() => {
+    console.log('GamePage useEffect 觸發，用戶狀態:', user)
     if (user) {
+      console.log('用戶已登入，開始載入資料')
       // 載入用戶完整資料
       loadUserData()
       
@@ -75,9 +77,9 @@ export default function GamePage() {
         }
         
         // 更新背包資料
-        if (data.inventory && data.inventory.length > 0) {
+        if (data.inventory) {
           dispatch(setItems(data.inventory))
-          console.log('背包資料已更新到 Redux store')
+          console.log('背包資料已更新到 Redux store', data.inventory)
         }
         
       } else {
