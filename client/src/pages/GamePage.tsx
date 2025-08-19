@@ -57,7 +57,7 @@ export default function GamePage() {
         return
       }
 
-      console.log('開始載入用戶資料...')
+      console.log('開始載入用戶資料...', new Date().toISOString())
       const response = await fetch('https://mmorpg-idle-game.onrender.com/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`
