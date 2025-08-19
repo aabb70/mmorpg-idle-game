@@ -20,7 +20,8 @@
       "Bash(npm run:*)",
       "Bash(npx tsx:*)",
       "Bash(npx netlify:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx prisma:*)"
     ],
     "deny": [],
     "ask": []

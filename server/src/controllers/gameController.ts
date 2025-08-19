@@ -189,6 +189,333 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
   }
 }
 
+export const startTargetedTraining = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId
+    const { skillType, targetItemId, repetitions } = req.body
+
+    if (!skillType || !targetItemId || !repetitions) {
+      res.status(400).json({ message: '需要指定技能類型、目標物品和重複次數' })
+      return
+    }
+
+    // 驗證目標物品是否存在且可通過該技能獲得
+    const targetItem = await prisma.item.findUnique({
+      where: { id: targetItemId }
+    })
+
+    if (!targetItem) {
+      res.status(404).json({ message: '目標物品不存在' })
+      return
+    }
+
+    // 檢查是否有正在進行的離線訓練
+    const existingTraining = await prisma.offlineTraining.findUnique({
+      where: { userId }
+    })
+
+    if (existingTraining && existingTraining.isActive) {
+      res.status(400).json({ message: '已有正在進行的離線訓練' })
+      return
+    }
+
+    // 創建或更新離線訓練記錄
+    const offlineTraining = await prisma.offlineTraining.upsert({
+      where: { userId },
+      update: {
+        skillType,
+        targetItemId,
+        repetitions,
+        completed: 0,
+        startTime: new Date(),
+        lastUpdate: new Date(),
+        isActive: true
+      },
+      create: {
+        userId,
+        skillType,
+        targetItemId,
+        repetitions,
+        completed: 0,
+        startTime: new Date(),
+        lastUpdate: new Date(),
+        isActive: true
+      },
+      include: {
+        targetItem: true
+      }
+    })
+
+    res.json({
+      message: '目標訓練已開始',
+      training: offlineTraining
+    })
+  } catch (error) {
+    console.error('開始目標訓練錯誤:', error)
+    res.status(500).json({ message: '服務器錯誤' })
+  }
+}
+
+export const stopTargetedTraining = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId
+
+    const training = await prisma.offlineTraining.findUnique({
+      where: { userId },
+      include: { targetItem: true }
+    })
+
+    if (!training || !training.isActive) {
+      res.status(404).json({ message: '沒有正在進行的離線訓練' })
+      return
+    }
+
+    // 計算離線進度
+    const progressResult = await calculateOfflineProgress(userId, training)
+
+    // 停止訓練
+    await prisma.offlineTraining.update({
+      where: { userId },
+      data: {
+        isActive: false,
+        completed: progressResult.totalCompleted,
+        lastUpdate: new Date()
+      }
+    })
+
+    res.json({
+      message: '離線訓練已停止',
+      progress: progressResult
+    })
+  } catch (error) {
+    console.error('停止離線訓練錯誤:', error)
+    res.status(500).json({ message: '服務器錯誤' })
+  }
+}
+
+export const getOfflineProgress = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId
+
+    const training = await prisma.offlineTraining.findUnique({
+      where: { userId },
+      include: { targetItem: true }
+    })
+
+    if (!training) {
+      res.json({ hasTraining: false })
+      return
+    }
+
+    if (!training.isActive) {
+      res.json({ 
+        hasTraining: true, 
+        isActive: false,
+        training
+      })
+      return
+    }
+
+    // 計算當前進度
+    const progressResult = await calculateOfflineProgress(userId, training)
+
+    res.json({
+      hasTraining: true,
+      isActive: true,
+      training,
+      progress: progressResult
+    })
+  } catch (error) {
+    console.error('獲取離線進度錯誤:', error)
+    res.status(500).json({ message: '服務器錯誤' })
+  }
+}
+
+// 計算離線進度的輔助函數
+async function calculateOfflineProgress(userId: string, training: any) {
+  const now = new Date()
+  const timeDiff = now.getTime() - training.lastUpdate.getTime()
+  const secondsPassed = Math.floor(timeDiff / 1000)
+
+  // 獲取用戶技能等級
+  const skill = await prisma.skill.findUnique({
+    where: {
+      userId_skillType: {
+        userId,
+        skillType: training.skillType
+      }
+    }
+  })
+
+  if (!skill) {
+    throw new Error('技能不存在')
+  }
+
+  // 計算基礎訓練時間（秒）和成功率
+  const rarity = training.targetItem.rarity
+  let baseTime = 3 // 基礎 3 秒
+  let baseSuccessRate = 0.5 // 基礎 50% 成功率
+
+  // 根據稀有度調整時間和成功率
+  const rarityMultipliers = {
+    COMMON: { time: 1, success: 1 },
+    UNCOMMON: { time: 1.5, success: 0.8 },
+    RARE: { time: 2.5, success: 0.6 },
+    EPIC: { time: 4, success: 0.4 },
+    LEGENDARY: { time: 6, success: 0.2 }
+  }
+
+  const multiplier = rarityMultipliers[rarity as keyof typeof rarityMultipliers] || rarityMultipliers.COMMON
+  const actualTime = baseTime * multiplier.time
+  const actualSuccessRate = Math.min(baseSuccessRate * multiplier.success * (1 + skill.level * 0.05), 0.95) // 技能等級影響成功率，最高 95%
+
+  // 計算可以完成的嘗試次數
+  const attemptsPossible = Math.floor(secondsPassed / actualTime)
+  const successfulAttempts = Math.floor(attemptsPossible * actualSuccessRate)
+  const newCompleted = Math.min(training.completed + successfulAttempts, training.repetitions)
+
+  // 如果有新的成功嘗試，更新資料庫
+  if (successfulAttempts > 0) {
+    await prisma.$transaction(async (tx) => {
+      // 更新離線訓練進度
+      await tx.offlineTraining.update({
+        where: { userId },
+        data: {
+          completed: newCompleted,
+          lastUpdate: now
+        }
+      })
+
+      // 添加物品到背包
+      if (successfulAttempts > 0) {
+        const existingInventoryItem = await tx.inventoryItem.findUnique({
+          where: {
+            userId_itemId: {
+              userId,
+              itemId: training.targetItemId
+            }
+          }
+        })
+
+        if (existingInventoryItem) {
+          await tx.inventoryItem.update({
+            where: {
+              userId_itemId: {
+                userId,
+                itemId: training.targetItemId
+              }
+            },
+            data: {
+              quantity: existingInventoryItem.quantity + successfulAttempts
+            }
+          })
+        } else {
+          await tx.inventoryItem.create({
+            data: {
+              userId,
+              itemId: training.targetItemId,
+              quantity: successfulAttempts
+            }
+          })
+        }
+      }
+
+      // 添加經驗值
+      const expPerSuccess = 10
+      const totalExp = successfulAttempts * expPerSuccess
+      
+      if (totalExp > 0) {
+        let currentSkill = await tx.skill.findUnique({
+          where: {
+            userId_skillType: {
+              userId,
+              skillType: training.skillType
+            }
+          }
+        })
+
+        if (currentSkill) {
+          let newExp = currentSkill.experience + totalExp
+          let newLevel = currentSkill.level
+          let maxExp = 100 * Math.pow(1.2, newLevel - 1)
+
+          // 處理升級
+          while (newExp >= maxExp) {
+            newExp -= maxExp
+            newLevel += 1
+            maxExp = 100 * Math.pow(1.2, newLevel - 1)
+          }
+
+          await tx.skill.update({
+            where: {
+              userId_skillType: {
+                userId,
+                skillType: training.skillType
+              }
+            },
+            data: {
+              level: newLevel,
+              experience: newExp
+            }
+          })
+        }
+      }
+    })
+  }
+
+  return {
+    secondsPassed,
+    attemptsPossible,
+    successfulAttempts,
+    totalCompleted: newCompleted,
+    itemsGained: successfulAttempts,
+    expGained: successfulAttempts * 10,
+    isCompleted: newCompleted >= training.repetitions
+  }
+}
+
+export const getAvailableItems = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { skillType } = req.params
+
+    if (!skillType) {
+      res.status(400).json({ message: '需要指定技能類型' })
+      return
+    }
+
+    // 根據技能類型獲取對應的物品
+    const skillMaterials: Record<string, string[]> = {
+      'MINING': ['銅礦石', '鐵礦石', '金礦石'],
+      'LOGGING': ['普通木材', '硬木'],
+      'FISHING': ['小魚', '大魚'],
+      'FORAGING': ['草藥', '魔法草'],
+      'SMITHING': ['銅錘', '鐵錘', '銅劍', '鐵劍'],
+      'TAILORING': ['布衣', '皮甲'],
+      'COOKING': ['麵包'],
+      'ALCHEMY': ['治療藥劑'],
+      'CRAFTING': ['銅錘', '鐵錘'],
+    }
+
+    const materialNames = skillMaterials[skillType] || []
+    
+    const items = await prisma.item.findMany({
+      where: {
+        name: { in: materialNames },
+        itemType: 'MATERIAL'
+      },
+      orderBy: [
+        { rarity: 'asc' },
+        { name: 'asc' }
+      ]
+    })
+
+    res.json({ items })
+  } catch (error) {
+    console.error('獲取可用物品錯誤:', error)
+    res.status(500).json({ message: '服務器錯誤' })
+  }
+}
+
 export const craftItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId

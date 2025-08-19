@@ -30,6 +30,9 @@ model User {
   marketListings MarketListing[]
   purchaseOrders PurchaseOrder[]
   
+  // 離線訓練
+  offlineTraining OfflineTraining?
+  
   @@map("users")
 }
 
@@ -61,6 +64,9 @@ model Item {
   // 庫存項目
   inventoryItems InventoryItem[]
   marketListings MarketListing[]
+  
+  // 離線訓練目標
+  offlineTrainings OfflineTraining[]
   
   @@map("items")
 }
@@ -127,6 +133,26 @@ model PurchaseOrder {
   buyer User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   
   @@map("purchase_orders")
+}
+
+model OfflineTraining {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  skillType    SkillType
+  targetItemId String
+  targetItem   Item     @relation(fields: [targetItemId], references: [id])
+  
+  repetitions  Int      // 要執行的次數
+  completed    Int      @default(0) // 已完成的次數
+  
+  startTime    DateTime @default(now())
+  lastUpdate   DateTime @default(now())
+  
+  isActive     Boolean  @default(true)
+  
+  @@map("offline_training")
 }
 
 enum SkillType {
