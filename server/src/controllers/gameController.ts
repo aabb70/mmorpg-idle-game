@@ -4,17 +4,31 @@ import { prisma } from '../index.js'
 export const getItems = async (req: Request, res: Response): Promise<void> => {
   try {
     const items = await prisma.item.findMany({
+      include: {
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      },
       orderBy: [
         { itemType: 'asc' },
+        { category: 'asc' },
         { rarity: 'asc' },
         { name: 'asc' }
       ]
     })
 
+    // 格式化物品數據，包含標籤信息
+    const formattedItems = items.map(item => ({
+      ...item,
+      tags: item.tags.map(t => t.tag.name)
+    }))
+
     // 添加版本訊息來確認部署狀態
     res.json({ 
-      items, 
-      serverVersion: "v1.1-testing-100percent-drop",
+      items: formattedItems, 
+      serverVersion: "v2.0-material-system",
       itemCount: items.length,
       deployTime: new Date().toISOString()
     })
@@ -28,10 +42,27 @@ export const getRecipes = async (req: Request, res: Response): Promise<void> => 
   try {
     const recipes = await prisma.recipe.findMany({
       include: {
-        item: true,
+        item: {
+          include: {
+            tags: {
+              include: {
+                tag: true
+              }
+            }
+          }
+        },
         ingredients: {
           include: {
-            item: true
+            item: {
+              include: {
+                tags: {
+                  include: {
+                    tag: true
+                  }
+                }
+              }
+            },
+            tag: true
           }
         }
       },
@@ -41,7 +72,29 @@ export const getRecipes = async (req: Request, res: Response): Promise<void> => 
       ]
     })
 
-    res.json({ recipes })
+    // 格式化配方數據
+    const formattedRecipes = recipes.map(recipe => ({
+      ...recipe,
+      item: {
+        ...recipe.item,
+        tags: recipe.item.tags.map(t => t.tag.name)
+      },
+      ingredients: recipe.ingredients.map(ing => ({
+        id: ing.id,
+        quantity: ing.quantity,
+        // 特定物品需求
+        item: ing.item ? {
+          ...ing.item,
+          tags: ing.item.tags.map(t => t.tag.name)
+        } : null,
+        // 材料分類需求
+        category: ing.category,
+        // 標籤需求
+        tag: ing.tag ? ing.tag.name : null
+      }))
+    }))
+
+    res.json({ recipes: formattedRecipes })
   } catch (error) {
     console.error('獲取配方列表錯誤:', error)
     res.status(500).json({ message: '服務器錯誤' })
@@ -104,74 +157,101 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
       }
     })
 
-    // 可能獲得材料 (根據技能類型) - 使用正確的物品映射
+    // 可能獲得材料 (根據技能類型和新的材料分類系統)
     let itemsGained: any[] = []
     if (true) { // 100% 機率獲得物品進行測試
-      // 根據技能類型選擇對應的合理材料
-      const skillMaterials: Record<string, string[]> = {
-        'MINING': ['銅礦石', '鐵礦石', '金礦石'],
-        'LOGGING': ['普通木材', '硬木'],
-        'FISHING': ['小魚', '大魚'], // 修復：釣魚現在會獲得魚類
-        'FORAGING': ['草藥', '魔法草'], // 修復：採集獲得草藥
-        'SMITHING': ['銅錘', '鐵錘', '銅劍', '鐵劍'],
-        'TAILORING': ['布衣', '皮甲'], // 修復：裁縫獲得服裝
-        'COOKING': ['麵包'], // 修復：廚師獲得食物
-        'ALCHEMY': ['治療藥劑'], // 修復：煉金獲得藥劑
-        'CRAFTING': ['銅錘', '鐵錘'],
+      // 根據技能類型選擇對應的材料類別
+      const skillMaterialCategories: Record<string, string[]> = {
+        'MINING': ['METAL'],
+        'LOGGING': ['WOOD'], 
+        'FISHING': ['FISH'],
+        'FORAGING': ['HERB'],
+        'SMITHING': [], // 製作職業，不產生原材料
+        'TAILORING': [], // 製作職業，不產生原材料
+        'COOKING': [], // 製作職業，不產生原材料
+        'ALCHEMY': [], // 製作職業，不產生原材料
+        'CRAFTING': ['FIBER', 'LIVESTOCK'], // 工藝可以產生纖維和畜牧產品
       }
 
-      const possibleMaterials = skillMaterials[skillType] || []
+      const categories = skillMaterialCategories[skillType] || []
       
-      if (possibleMaterials.length > 0) {
-        const randomMaterialName = possibleMaterials[Math.floor(Math.random() * possibleMaterials.length)]
+      if (categories.length > 0) {
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)]
         
-        const materialItem = await prisma.item.findFirst({
+        // 根據分類和技能等級獲取合適的材料
+        const materialItems = await prisma.item.findMany({
           where: {
-            name: randomMaterialName,
-            itemType: 'MATERIAL'
-          }
-        })
-
-        if (materialItem) {
-          const quantity = Math.floor(Math.random() * 3) + 1
-
-          // 添加到背包
-          const existingInventoryItem = await prisma.inventoryItem.findUnique({
-            where: {
-              userId_itemId: {
-                userId,
-                itemId: materialItem.id
+            itemType: 'MATERIAL',
+            category: randomCategory as any
+          },
+          include: {
+            tags: {
+              include: {
+                tag: true
               }
             }
+          }
+        })
+        
+        if (materialItems.length > 0) {
+          // 根據稀有度和技能等級選擇材料
+          const availableMaterials = materialItems.filter(item => {
+            const rarityLevel = {
+              'COMMON': 1,
+              'UNCOMMON': 2,
+              'RARE': 3,
+              'EPIC': 4,
+              'LEGENDARY': 5
+            }[item.rarity] || 1
+            
+            // 技能等級越高，越容易獲得稀有材料
+            const skillRarityChance = Math.min(newLevel / 10, 0.8)
+            return rarityLevel <= (1 + skillRarityChance * 4)
           })
+          
+          if (availableMaterials.length > 0) {
+            const selectedMaterial = availableMaterials[Math.floor(Math.random() * availableMaterials.length)]
+            const quantity = Math.floor(Math.random() * 3) + 1
 
-          if (existingInventoryItem) {
-            await prisma.inventoryItem.update({
+            // 添加到背包
+            const existingInventoryItem = await prisma.inventoryItem.findUnique({
               where: {
                 userId_itemId: {
                   userId,
-                  itemId: materialItem.id
+                  itemId: selectedMaterial.id
                 }
-              },
-              data: {
-                quantity: existingInventoryItem.quantity + quantity
               }
             })
-          } else {
-            await prisma.inventoryItem.create({
-              data: {
-                userId,
-                itemId: materialItem.id,
-                quantity
-              }
+
+            if (existingInventoryItem) {
+              await prisma.inventoryItem.update({
+                where: {
+                  userId_itemId: {
+                    userId,
+                    itemId: selectedMaterial.id
+                  }
+                },
+                data: {
+                  quantity: existingInventoryItem.quantity + quantity
+                }
+              })
+            } else {
+              await prisma.inventoryItem.create({
+                data: {
+                  userId,
+                  itemId: selectedMaterial.id,
+                  quantity
+                }
+              })
+            }
+
+            itemsGained.push({
+              id: selectedMaterial.id,
+              name: selectedMaterial.name,
+              quantity,
+              tags: selectedMaterial.tags.map(t => t.tag.name)
             })
           }
-
-          itemsGained.push({
-            id: materialItem.id,
-            name: materialItem.name,
-            quantity
-          })
         }
       }
     }

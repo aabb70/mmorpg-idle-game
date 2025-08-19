@@ -54,8 +54,12 @@ model Item {
   name        String @unique
   description String
   itemType    ItemType
+  category    MaterialCategory?  // 材料分類（魚類、金屬等）
   rarity      Rarity @default(COMMON)
   baseValue   Int @default(0)
+  
+  // 標籤系統
+  tags        ItemTag[]
   
   // 製作需求
   recipes     Recipe[]
@@ -69,6 +73,29 @@ model Item {
   offlineTrainings OfflineTraining[]
   
   @@map("items")
+}
+
+model Tag {
+  id          String @id @default(cuid())
+  name        String @unique  // 標籤名稱：油脂、近海、電性、深海、清香等
+  description String?
+  
+  itemTags    ItemTag[]
+  recipeIngredients RecipeIngredient[]
+  
+  @@map("tags")
+}
+
+model ItemTag {
+  id     String @id @default(cuid())
+  itemId String
+  tagId  String
+  
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([itemId, tagId])
+  @@map("item_tags")
 }
 
 model Recipe {
@@ -86,11 +113,14 @@ model Recipe {
 model RecipeIngredient {
   id       String @id @default(cuid())
   recipeId String
-  itemId   String
+  itemId   String?  // 特定物品需求（可選）
+  category MaterialCategory?  // 材料分類需求（可選）
+  tagId    String?  // 標籤需求（可選）
   quantity Int
   
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  item   Item?  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag    Tag?   @relation(fields: [tagId], references: [id], onDelete: Cascade)
   
   @@map("recipe_ingredients")
 }
@@ -172,7 +202,18 @@ enum ItemType {
   TOOL       // 工具
   EQUIPMENT  // 裝備
   CONSUMABLE // 消耗品
+  FOOD       // 食物
+  POTION     // 藥劑
   MISC       // 雜項
+}
+
+enum MaterialCategory {
+  FISH       // 魚類
+  METAL      // 金屬
+  WOOD       // 木材
+  FIBER      // 纖維/皮革
+  HERB       // 香草
+  LIVESTOCK  // 畜牧產品
 }
 
 enum Rarity {

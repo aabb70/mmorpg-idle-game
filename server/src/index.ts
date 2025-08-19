@@ -39,6 +39,26 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'MMORPG Idle Game Server is running!' })
 })
 
+// 管理員API：初始化材料系統
+app.post('/api/admin/init-materials', async (req, res) => {
+  try {
+    // 先測試資料庫連接
+    await prisma.$connect()
+    console.log('資料庫連接測試成功')
+    
+    // 測試簡單查詢
+    const userCount = await prisma.user.count()
+    console.log(`目前用戶數量: ${userCount}`)
+    
+    const { seedMaterialSystem } = await import('./seeds/materialSystem.js')
+    await seedMaterialSystem(prisma)
+    res.json({ success: true, message: '材料系統初始化完成' })
+  } catch (error) {
+    console.error('材料系統初始化失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // 應用路由
 app.use('/api/auth', authRoutes)
 app.use('/api/game', gameRoutes)
