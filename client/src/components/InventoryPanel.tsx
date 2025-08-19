@@ -164,7 +164,21 @@ export default function InventoryPanel() {
                 </Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   類型：{item.itemType}
+                  {item.category && ` (${item.category})`}
                 </Typography>
+                {item.tags && item.tags.length > 0 && (
+                  <Box sx={{ mb: 1 }}>
+                    {item.tags.map((tag: any, index: number) => (
+                      <Chip
+                        key={index}
+                        label={tag.name}
+                        size="small"
+                        variant="outlined"
+                        sx={{ mr: 0.5, mb: 0.5, fontSize: '0.75rem' }}
+                      />
+                    ))}
+                  </Box>
+                )}
                 <Typography variant="h6" color="primary" gutterBottom>
                   數量：{item.quantity}
                 </Typography>

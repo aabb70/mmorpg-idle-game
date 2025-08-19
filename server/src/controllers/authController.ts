@@ -134,7 +134,15 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         skills: true,
         inventory: {
           include: {
-            item: true,
+            item: {
+              include: {
+                tags: {
+                  include: {
+                    tag: true
+                  }
+                }
+              }
+            },
           },
         },
       },
@@ -158,9 +166,13 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
       inventory: user.inventory.map((item: any) => ({
         id: item.item.id,
         name: item.item.name,
+        description: item.item.description,
         quantity: item.quantity,
         itemType: item.item.itemType,
+        category: item.item.category,
         rarity: item.item.rarity,
+        baseValue: item.item.baseValue,
+        tags: item.item.tags.map((t: any) => ({ name: t.tag.name, description: t.tag.description })),
       })),
     })
   } catch (error) {
