@@ -11,7 +11,13 @@ export const getItems = async (req: Request, res: Response): Promise<void> => {
       ]
     })
 
-    res.json({ items })
+    // 添加版本訊息來確認部署狀態
+    res.json({ 
+      items, 
+      serverVersion: "v1.1-testing-100percent-drop",
+      itemCount: items.length,
+      deployTime: new Date().toISOString()
+    })
   } catch (error) {
     console.error('獲取物品列表錯誤:', error)
     res.status(500).json({ message: '服務器錯誤' })
