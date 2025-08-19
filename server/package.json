@@ -2,6 +2,7 @@
   "name": "mmorpg-idle-server",
   "version": "1.0.0",
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && npx prisma generate",
@@ -30,5 +31,8 @@
     "typescript": "^5.2.2",
     "tsx": "^4.6.2",
     "prisma": "^5.7.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
