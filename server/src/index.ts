@@ -39,6 +39,27 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'MMORPG Idle Game Server is running!' })
 })
 
+// 公開API：檢查材料系統狀態
+app.get('/api/material-status', async (req, res) => {
+  try {
+    const materialCount = await prisma.item.count({
+      where: { itemType: 'MATERIAL' }
+    })
+    const tagCount = await prisma.tag.count()
+    const recipeCount = await prisma.recipe.count()
+    
+    res.json({
+      materialCount,
+      tagCount,
+      recipeCount,
+      hasMaterialSystem: materialCount > 0 && tagCount > 0
+    })
+  } catch (error) {
+    console.error('檢查材料系統狀態失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // 管理員API：初始化材料系統
 app.post('/api/admin/init-materials', async (req, res) => {
   try {
