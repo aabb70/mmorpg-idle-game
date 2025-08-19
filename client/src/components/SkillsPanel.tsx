@@ -102,14 +102,23 @@ export default function SkillsPanel() {
             rarity: 'COMMON'
           }))
         })
+        
+        // 顯示物品獲得通知
+        const itemMessage = response.itemsGained.map((item: any) => 
+          `獲得 ${item.name} x${item.quantity}`
+        ).join(', ')
+        dispatch(addNotification(`🎁 ${itemMessage}`))
+      } else {
+        // 如果沒有獲得物品也要提示
+        dispatch(addNotification('🎯 訓練完成，但這次沒有獲得物品'))
       }
 
-      // 顯示通知
+      // 顯示經驗通知
       const expMessage = `${skillNames[skillType]} +${response.expGained} 經驗`
-      dispatch(addNotification(expMessage))
+      dispatch(addNotification(`⭐ ${expMessage}`))
 
       if (response.leveledUp) {
-        dispatch(addNotification(`${skillNames[skillType]} 升級了！`))
+        dispatch(addNotification(`🎉 ${skillNames[skillType]} 升級了！`))
       }
 
     } catch (error) {

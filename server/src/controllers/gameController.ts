@@ -104,20 +104,20 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
       }
     })
 
-    // 可能獲得材料 (根據技能類型) - 使用現有資料庫中的物品
+    // 可能獲得材料 (根據技能類型) - 使用正確的物品映射
     let itemsGained: any[] = []
     if (true) { // 100% 機率獲得物品進行測試
-      // 根據技能類型選擇對應的材料 - 暫時使用現有物品
+      // 根據技能類型選擇對應的合理材料
       const skillMaterials: Record<string, string[]> = {
-        'MINING': ['銅礦石', '鐵礦石'],
-        'LOGGING': ['普通木材'],
-        'FISHING': ['銅礦石', '鐵礦石'], // 暫時用礦石代替魚，直到資料庫更新
-        'FORAGING': ['普通木材'], // 暫時用木材代替草藥
-        'SMITHING': ['銅錘', '銅劍'],
-        'TAILORING': ['普通木材'], // 暫時用木材代替布料
-        'COOKING': ['普通木材'], // 暫時用木材代替食物
-        'ALCHEMY': ['銅礦石'], // 暫時用礦石代替藥劑
-        'CRAFTING': ['銅錘'],
+        'MINING': ['銅礦石', '鐵礦石', '金礦石'],
+        'LOGGING': ['普通木材', '硬木'],
+        'FISHING': ['小魚', '大魚'], // 修復：釣魚現在會獲得魚類
+        'FORAGING': ['草藥', '魔法草'], // 修復：採集獲得草藥
+        'SMITHING': ['銅錘', '鐵錘', '銅劍', '鐵劍'],
+        'TAILORING': ['布衣', '皮甲'], // 修復：裁縫獲得服裝
+        'COOKING': ['麵包'], // 修復：廚師獲得食物
+        'ALCHEMY': ['治療藥劑'], // 修復：煉金獲得藥劑
+        'CRAFTING': ['銅錘', '鐵錘'],
       }
 
       const possibleMaterials = skillMaterials[skillType] || []
