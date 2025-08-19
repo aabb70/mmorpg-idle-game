@@ -100,7 +100,7 @@ export const trainSkill = async (req: Request, res: Response): Promise<void> => 
 
     // 可能獲得材料 (根據技能類型) - 使用現有資料庫中的物品
     let itemsGained: any[] = []
-    if (Math.random() < 0.8) { // 提高到 80% 機率獲得物品進行測試
+    if (true) { // 100% 機率獲得物品進行測試
       // 根據技能類型選擇對應的材料 - 暫時使用現有物品
       const skillMaterials: Record<string, string[]> = {
         'MINING': ['銅礦石', '鐵礦石'],
