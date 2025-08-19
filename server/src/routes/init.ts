@@ -35,13 +35,13 @@ router.post('/database', async (req, res) => {
   }
 })
 
-// 強制重新種子資料 API 端點
+// 強制重新種子資料 API 端點 (安全版本 - 不刪除用戶)
 router.post('/reseed', async (req, res) => {
   try {
     console.log('開始強制重新種子資料...')
     
-    // 直接執行種子資料，不檢查是否已有資料
-    await seedDatabase()
+    // 使用安全的種子資料函數，保留用戶資料
+    await safeSeedDatabase()
     
     console.log('強制重新種子完成！')
     res.json({ message: '強制重新種子成功！', itemsCreated: true })
@@ -49,6 +49,25 @@ router.post('/reseed', async (req, res) => {
     console.error('強制重新種子失敗:', error)
     res.status(500).json({ 
       message: '強制重新種子失敗', 
+      error: error instanceof Error ? error.message : String(error) 
+    })
+  }
+})
+
+// 危險的完全重置 API 端點 (僅用於開發)
+router.post('/full-reset', async (req, res) => {
+  try {
+    console.log('開始完全重置資料庫...')
+    
+    // 完全清空並重新建立
+    await seedDatabase()
+    
+    console.log('完全重置完成！')
+    res.json({ message: '完全重置成功！', itemsCreated: true })
+  } catch (error) {
+    console.error('完全重置失敗:', error)
+    res.status(500).json({ 
+      message: '完全重置失敗', 
       error: error instanceof Error ? error.message : String(error) 
     })
   }
@@ -348,6 +367,189 @@ async function seedDatabase() {
   })
 
   console.log(`建立了 ${items.length} 個物品和多個配方`)
+}
+
+// 安全的種子資料函數 - 保留用戶資料
+async function safeSeedDatabase() {
+  // 只清理非用戶相關的資料
+  await prisma.recipeIngredient.deleteMany()
+  await prisma.recipe.deleteMany()
+  await prisma.item.deleteMany()
+  // 注意：不刪除用戶、技能、背包等資料
+
+  // 建立完整物品清單
+  const items = await Promise.all([
+    // 採礦材料
+    prisma.item.create({
+      data: {
+        name: '銅礦石',
+        description: '最基礎的金屬礦石',
+        itemType: 'MATERIAL',
+        rarity: 'COMMON',
+        baseValue: 5,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '鐵礦石',
+        description: '常見的金屬礦石',
+        itemType: 'MATERIAL',
+        rarity: 'UNCOMMON',
+        baseValue: 15,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '金礦石',
+        description: '珍貴的金屬礦石',
+        itemType: 'MATERIAL',
+        rarity: 'RARE',
+        baseValue: 50,
+      },
+    }),
+
+    // 伐木材料
+    prisma.item.create({
+      data: {
+        name: '普通木材',
+        description: '最基礎的木材',
+        itemType: 'MATERIAL',
+        rarity: 'COMMON',
+        baseValue: 3,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '硬木',
+        description: '質地堅硬的木材',
+        itemType: 'MATERIAL',
+        rarity: 'UNCOMMON',
+        baseValue: 12,
+      },
+    }),
+
+    // 採集材料
+    prisma.item.create({
+      data: {
+        name: '草藥',
+        description: '常見的藥用植物',
+        itemType: 'MATERIAL',
+        rarity: 'COMMON',
+        baseValue: 8,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '魔法草',
+        description: '蘊含魔力的稀有植物',
+        itemType: 'MATERIAL',
+        rarity: 'RARE',
+        baseValue: 30,
+      },
+    }),
+
+    // 釣魚材料
+    prisma.item.create({
+      data: {
+        name: '小魚',
+        description: '常見的淡水魚',
+        itemType: 'MATERIAL',
+        rarity: 'COMMON',
+        baseValue: 6,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '大魚',
+        description: '較大的魚類',
+        itemType: 'MATERIAL',
+        rarity: 'UNCOMMON',
+        baseValue: 18,
+      },
+    }),
+
+    // 製作工具
+    prisma.item.create({
+      data: {
+        name: '銅錘',
+        description: '基礎的鍛造工具',
+        itemType: 'TOOL',
+        rarity: 'COMMON',
+        baseValue: 25,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '鐵錘',
+        description: '更好的鍛造工具',
+        itemType: 'TOOL',
+        rarity: 'UNCOMMON',
+        baseValue: 75,
+      },
+    }),
+
+    // 裝備
+    prisma.item.create({
+      data: {
+        name: '銅劍',
+        description: '基礎的武器',
+        itemType: 'EQUIPMENT',
+        rarity: 'COMMON',
+        baseValue: 40,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '鐵劍',
+        description: '更強的武器',
+        itemType: 'EQUIPMENT',
+        rarity: 'UNCOMMON',
+        baseValue: 120,
+      },
+    }),
+
+    // 消耗品
+    prisma.item.create({
+      data: {
+        name: '麵包',
+        description: '基礎的食物',
+        itemType: 'CONSUMABLE',
+        rarity: 'COMMON',
+        baseValue: 10,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '治療藥劑',
+        description: '恢復體力的藥劑',
+        itemType: 'CONSUMABLE',
+        rarity: 'UNCOMMON',
+        baseValue: 35,
+      },
+    }),
+
+    // 服裝
+    prisma.item.create({
+      data: {
+        name: '布衣',
+        description: '基礎的服裝',
+        itemType: 'EQUIPMENT',
+        rarity: 'COMMON',
+        baseValue: 20,
+      },
+    }),
+    prisma.item.create({
+      data: {
+        name: '皮甲',
+        description: '更好的防護服',
+        itemType: 'EQUIPMENT',
+        rarity: 'UNCOMMON',
+        baseValue: 60,
+      },
+    }),
+  ])
+
+  console.log(`安全模式：建立了 ${items.length} 個物品，保留了用戶資料`)
 }
 
 export default router
