@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux'
+import { useState, useEffect } from 'react'
 import {
   Paper,
   Typography,
@@ -8,9 +9,14 @@ import {
   Box,
   Card,
   CardContent,
+  Alert,
+  Chip,
 } from '@mui/material'
 import { RootState } from '../store/store'
-import { SkillType, setActiveSkill, startTraining, stopTraining } from '../store/slices/skillSlice'
+import { SkillType, setActiveSkill, startTraining, stopTraining, addExperience } from '../store/slices/skillSlice'
+import { addItem } from '../store/slices/inventorySlice'
+import { addNotification } from '../store/slices/gameSlice'
+import { apiClient } from '../utils/api'
 
 const skillNames = {
   [SkillType.MINING]: '採礦',
@@ -24,17 +30,100 @@ const skillNames = {
   [SkillType.CRAFTING]: '工藝',
 }
 
+const skillMaterials: Record<SkillType, string[]> = {
+  [SkillType.MINING]: ['銅礦石', '鐵礦石', '金礦石'],
+  [SkillType.LOGGING]: ['普通木材', '硬木'],
+  [SkillType.FISHING]: ['小魚', '大魚'],
+  [SkillType.FORAGING]: ['草藥', '魔法草'],
+  [SkillType.SMITHING]: ['銅錘', '鐵錘', '銅劍', '鐵劍'],
+  [SkillType.TAILORING]: ['布衣', '皮甲'],
+  [SkillType.COOKING]: ['麵包'],
+  [SkillType.ALCHEMY]: ['治療藥劑'],
+  [SkillType.CRAFTING]: ['銅錘', '鐵錘'],
+}
+
 export default function SkillsPanel() {
   const dispatch = useDispatch()
   const { skills, activeSkill, isTraining } = useSelector((state: RootState) => state.skills)
+  const [trainingProgress, setTrainingProgress] = useState(0)
+  const [recentRewards, setRecentRewards] = useState<string[]>([])
 
-  const handleStartTraining = (skillType: SkillType) => {
+  const handleStartTraining = async (skillType: SkillType) => {
     dispatch(setActiveSkill(skillType))
     dispatch(startTraining())
+    setTrainingProgress(0)
+    setRecentRewards([])
+
+    // 開始訓練進度條
+    const trainingTime = 3000 // 3秒訓練時間
+    const interval = 50 // 50ms 更新一次
+    const increment = 100 / (trainingTime / interval)
+
+    const progressInterval = setInterval(() => {
+      setTrainingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval)
+          completeTraining(skillType)
+          return 100
+        }
+        return prev + increment
+      })
+    }, interval)
+  }
+
+  const completeTraining = async (skillType: SkillType) => {
+    try {
+      // 調用後端 API
+      const response = await apiClient.trainSkill(skillType)
+      
+      // 更新前端狀態
+      dispatch(addExperience({ 
+        skillType, 
+        amount: response.expGained 
+      }))
+
+      // 顯示獲得的物品
+      if (response.itemsGained && response.itemsGained.length > 0) {
+        const rewards = response.itemsGained.map((item: any) => 
+          `${item.name} x${item.quantity}`
+        )
+        setRecentRewards(rewards)
+        
+        // 添加到背包
+        response.itemsGained.forEach((item: any) => {
+          dispatch(addItem({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            itemType: 'MATERIAL',
+            rarity: 'COMMON'
+          }))
+        })
+      }
+
+      // 顯示通知
+      const expMessage = `${skillNames[skillType]} +${response.expGained} 經驗`
+      dispatch(addNotification(expMessage))
+
+      if (response.leveledUp) {
+        dispatch(addNotification(`${skillNames[skillType]} 升級了！`))
+      }
+
+    } catch (error) {
+      console.error('訓練失敗:', error)
+      dispatch(addNotification('訓練失敗，請稍後再試'))
+    } finally {
+      dispatch(stopTraining())
+      setTrainingProgress(0)
+      
+      // 3秒後清除獎勵顯示
+      setTimeout(() => setRecentRewards([]), 3000)
+    }
   }
 
   const handleStopTraining = () => {
     dispatch(stopTraining())
+    setTrainingProgress(0)
   }
 
   return (
@@ -45,9 +134,39 @@ export default function SkillsPanel() {
 
       {activeSkill && isTraining && (
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" color="primary">
-            正在訓練：{skillNames[activeSkill]}
-          </Typography>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="h6">
+              正在訓練：{skillNames[activeSkill]}
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={trainingProgress} 
+                sx={{ height: 10, borderRadius: 5 }}
+              />
+              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                訓練進度：{Math.round(trainingProgress)}%
+              </Typography>
+            </Box>
+          </Alert>
+          
+          {recentRewards.length > 0 && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              <Typography variant="subtitle2">獲得物品：</Typography>
+              <Box sx={{ mt: 1 }}>
+                {recentRewards.map((reward, index) => (
+                  <Chip 
+                    key={index} 
+                    label={reward} 
+                    color="success" 
+                    size="small" 
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                ))}
+              </Box>
+            </Alert>
+          )}
+          
           <Button variant="contained" color="secondary" onClick={handleStopTraining}>
             停止訓練
           </Button>
@@ -79,6 +198,11 @@ export default function SkillsPanel() {
                       {skill.experience} / {skill.maxExperience} 經驗
                     </Typography>
                   </Box>
+                  
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                    可能獲得：{skillMaterials[skillType].slice(0, 2).join('、')}
+                    {skillMaterials[skillType].length > 2 && '...'}
+                  </Typography>
                   <Button
                     fullWidth
                     variant="contained"
