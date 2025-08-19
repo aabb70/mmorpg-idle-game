@@ -56,7 +56,7 @@ app.get('/api/material-status', async (req, res) => {
     })
   } catch (error) {
     console.error('檢查材料系統狀態失敗:', error)
-    res.status(500).json({ success: false, error: error.message })
+    res.status(500).json({ success: false, error: (error as Error).message })
   }
 })
 
@@ -76,7 +76,7 @@ app.post('/api/admin/init-materials', async (req, res) => {
     res.json({ success: true, message: '材料系統初始化完成' })
   } catch (error) {
     console.error('材料系統初始化失敗:', error)
-    res.status(500).json({ success: false, error: error.message })
+    res.status(500).json({ success: false, error: (error as Error).message })
   }
 })
 

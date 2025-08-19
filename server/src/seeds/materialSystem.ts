@@ -316,9 +316,12 @@ export async function seedMaterialSystem(prisma: PrismaClient) {
         where: { name: materialData.name },
         update: {},
         create: {
-          ...itemData,
+          name: itemData.name,
+          description: itemData.description,
           itemType: 'MATERIAL' as any,
-          category: materialData.category as any
+          category: materialData.category as any,
+          rarity: itemData.rarity as any,
+          baseValue: itemData.baseValue
         }
       })
       
@@ -352,8 +355,11 @@ export async function seedMaterialSystem(prisma: PrismaClient) {
         where: { name: recipeData.name },
         update: {},
         create: {
-          ...itemData,
-          itemType: recipeData.itemType as any
+          name: itemData.name,
+          description: itemData.description,
+          itemType: itemData.itemType as any,
+          rarity: itemData.rarity as any,
+          baseValue: itemData.baseValue
         }
       })
       
@@ -405,8 +411,11 @@ export async function seedMaterialSystem(prisma: PrismaClient) {
         where: { name: recipeData.name },
         update: {},
         create: {
-          ...itemData,
-          itemType: recipeData.itemType as any
+          name: itemData.name,
+          description: itemData.description,
+          itemType: itemData.itemType as any,
+          rarity: itemData.rarity as any,
+          baseValue: itemData.baseValue
         }
       })
       

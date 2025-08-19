@@ -640,14 +640,14 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
         where: {
           userId_itemId: {
             userId,
-            itemId: ingredient.itemId
+            itemId: ingredient.itemId!
           }
         }
       })
 
       if (!inventoryItem || inventoryItem.quantity < ingredient.quantity) {
         res.status(400).json({ 
-          message: `材料不足: ${ingredient.item.name}` 
+          message: `材料不足: ${ingredient.item?.name || '未知物品'}` 
         })
         return
       }
@@ -659,7 +659,7 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
         where: {
           userId_itemId: {
             userId,
-            itemId: ingredient.itemId
+            itemId: ingredient.itemId!
           }
         },
         data: {
