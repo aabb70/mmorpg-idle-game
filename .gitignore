@@ -90,3 +90,5 @@ jspm_packages/
 
 # Prisma
 server/prisma/migrations/
+# Local Netlify folder
+.netlify
