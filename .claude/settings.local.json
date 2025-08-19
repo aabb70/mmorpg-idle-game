@@ -21,7 +21,9 @@
       "Bash(npx tsx:*)",
       "Bash(npx netlify:*)",
       "Bash(grep:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "WebFetch(domain:mmorpg-idle-game.onrender.com)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
