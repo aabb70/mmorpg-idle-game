@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client'
 import authRoutes from './routes/auth.js'
 import gameRoutes from './routes/game.js'
 import marketRoutes from './routes/market.js'
+import initRoutes from './routes/init.js'
 
 dotenv.config()
 
@@ -36,6 +37,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/game', gameRoutes)
 app.use('/api/market', marketRoutes)
+app.use('/api/init', initRoutes)
 
 // Socket.io 連接處理
 io.on('connection', (socket) => {
@@ -72,8 +74,16 @@ io.on('connection', (socket) => {
 })
 
 // 啟動服務器
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`服務器運行在 http://localhost:${PORT}`)
+  
+  // 檢查資料庫連接
+  try {
+    await prisma.$connect()
+    console.log('資料庫連接成功')
+  } catch (error) {
+    console.error('資料庫連接失敗:', error)
+  }
 })
 
 export { app, io, prisma }
