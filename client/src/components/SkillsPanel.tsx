@@ -394,6 +394,25 @@ export default function SkillsPanel() {
                             <Typography variant="body2">
                               總預計時間：{Math.floor(totalTime / 60)} 分 {Math.round(totalTime % 60)} 秒
                             </Typography>
+                            
+                            {/* 顯示材料需求 (如果是配方) */}
+                            {(item as any).ingredients && (item as any).ingredients.length > 0 && (
+                              <Box sx={{ mt: 2 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                  製作所需材料：
+                                </Typography>
+                                {(item as any).ingredients.map((ingredient: any, index: number) => (
+                                  <Typography key={index} variant="body2" sx={{ ml: 1 }}>
+                                    • {ingredient.item ? 
+                                        ingredient.item.name : 
+                                        ingredient.category ? 
+                                          `任何 ${ingredient.category} 類型` : 
+                                          `標籤: ${ingredient.tag?.name}`
+                                      } × {ingredient.quantity * expectedItems}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            )}
                           </>
                         )
                       })()}
@@ -445,6 +464,26 @@ export default function SkillsPanel() {
                     <Typography variant="body2">
                       預期獲得：約 {expectedItems} 個
                     </Typography>
+                    
+                    {/* 顯示材料需求 (如果是配方) */}
+                    {(item as any).ingredients && (item as any).ingredients.length > 0 && (
+                      <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                          所需材料：
+                        </Typography>
+                        {(item as any).ingredients.map((ingredient: any, index: number) => (
+                          <Typography key={index} variant="body2" sx={{ ml: 1, fontSize: '0.85rem' }}>
+                            • {ingredient.item ? 
+                                ingredient.item.name : 
+                                ingredient.category ? 
+                                  `任何 ${ingredient.category} 類型` : 
+                                  `標籤: ${ingredient.tag?.name}`
+                              } × {ingredient.quantity * repetitions}
+                          </Typography>
+                        ))}
+                      </Box>
+                    )}
+                    
                     <Typography variant="caption" color="text.secondary">
                       訓練將在背景進行，即使關閉網頁也會繼續
                     </Typography>

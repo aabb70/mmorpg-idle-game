@@ -113,13 +113,34 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     }
 
     // 驗證目標物品是否存在且可通過該技能獲得
-    const targetItem = await prisma.item.findUnique({
-      where: { id: targetItemId }
-    })
+    const craftingSkills = ['SMITHING', 'TAILORING', 'COOKING', 'ALCHEMY']
+    let targetItem: any = null
 
-    if (!targetItem) {
-      res.status(404).json({ message: '目標物品不存在' })
-      return
+    if (craftingSkills.includes(skillType)) {
+      // 對於製作職業，targetItemId 是 recipe ID
+      const recipe = await prisma.recipe.findUnique({
+        where: { id: targetItemId },
+        include: {
+          item: true
+        }
+      })
+
+      if (!recipe) {
+        res.status(404).json({ message: '目標配方不存在' })
+        return
+      }
+
+      targetItem = recipe.item
+    } else {
+      // 對於採集職業，targetItemId 是 item ID
+      targetItem = await prisma.item.findUnique({
+        where: { id: targetItemId }
+      })
+
+      if (!targetItem) {
+        res.status(404).json({ message: '目標物品不存在' })
+        return
+      }
     }
 
     // 檢查是否有正在進行的離線訓練
