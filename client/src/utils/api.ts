@@ -1,16 +1,19 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.MODE === 'production' 
     ? 'https://mmorpg-idle-game.onrender.com' 
-    : 'http://localhost:5000')
+    : 'http://localhost:5001')
 
 class ApiClient {
   private baseURL: string
   private token: string | null = null
+  private adminToken: string | null = null
 
   constructor() {
     this.baseURL = API_BASE_URL
     this.token = localStorage.getItem('auth_token')
+    this.adminToken = localStorage.getItem('admin_token')
     console.log('ApiClient 初始化，token:', this.token ? '已設定' : '未設定')
+    console.log('ApiClient 初始化，admin token:', this.adminToken ? '已設定' : '未設定')
   }
 
   setToken(token: string) {
@@ -24,6 +27,21 @@ class ApiClient {
     localStorage.removeItem('auth_token')
   }
 
+  setAdminToken(token: string) {
+    this.adminToken = token
+    localStorage.setItem('admin_token', token)
+  }
+
+  clearAdminToken() {
+    this.adminToken = null
+    localStorage.removeItem('admin_token')
+  }
+
+  refreshTokens() {
+    this.token = localStorage.getItem('auth_token')
+    this.adminToken = localStorage.getItem('admin_token')
+  }
+
   private async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseURL}/api${endpoint}`
     
@@ -32,7 +50,10 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     }
 
-    if (this.token) {
+    // 對於管理員 API，優先使用管理員 token
+    if (endpoint.startsWith('/admin') && this.adminToken) {
+      headers['Authorization'] = `Bearer ${this.adminToken}`
+    } else if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
@@ -117,6 +138,31 @@ class ApiClient {
 
   async getOfflineProgress() {
     return this.request('/game/offline-progress')
+  }
+
+  // 通用 HTTP 方法
+  async get(endpoint: string) {
+    return this.request(endpoint)
+  }
+
+  async post(endpoint: string, data?: any) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async put(endpoint: string, data?: any) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async delete(endpoint: string) {
+    return this.request(endpoint, {
+      method: 'DELETE',
+    })
   }
 
   // 市場相關
