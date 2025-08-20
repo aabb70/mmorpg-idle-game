@@ -650,7 +650,7 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
 
     if (gatheringSkills.includes(skillType)) {
       // 獲取用戶當前技能等級
-      const userId = (req as any).user?.id
+      const userId = (req as any).userId
       let userSkillLevel = 1
 
       if (userId) {
