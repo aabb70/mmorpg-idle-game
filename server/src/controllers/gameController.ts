@@ -107,7 +107,14 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     const userId = (req as any).userId
     const { skillType, targetItemId, repetitions } = req.body
 
+    console.log('=== 開始目標訓練 ===')
+    console.log('userId:', userId)
+    console.log('skillType:', skillType)
+    console.log('targetItemId:', targetItemId)
+    console.log('repetitions:', repetitions)
+
     if (!skillType || !targetItemId || !repetitions) {
+      console.log('❌ 參數不完整')
       res.status(400).json({ message: '需要指定技能類型、目標物品和重複次數' })
       return
     }
@@ -116,8 +123,11 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     const craftingSkills = ['SMITHING', 'TAILORING', 'COOKING', 'ALCHEMY']
     let targetItem: any = null
 
+    console.log('檢查技能類型:', skillType, '是製作技能?', craftingSkills.includes(skillType))
+
     if (craftingSkills.includes(skillType)) {
       // 對於製作職業，targetItemId 是 recipe ID
+      console.log('查找配方ID:', targetItemId)
       const recipe = await prisma.recipe.findUnique({
         where: { id: targetItemId },
         include: {
@@ -125,7 +135,10 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
         }
       })
 
+      console.log('找到配方:', recipe ? `${recipe.item.name} (${recipe.id})` : '無')
+
       if (!recipe) {
+        console.log('❌ 目標配方不存在')
         res.status(404).json({ message: '目標配方不存在' })
         return
       }
@@ -133,15 +146,21 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
       targetItem = recipe.item
     } else {
       // 對於採集職業，targetItemId 是 item ID
+      console.log('查找物品ID:', targetItemId)
       targetItem = await prisma.item.findUnique({
         where: { id: targetItemId }
       })
 
+      console.log('找到物品:', targetItem ? targetItem.name : '無')
+
       if (!targetItem) {
+        console.log('❌ 目標物品不存在')
         res.status(404).json({ message: '目標物品不存在' })
         return
       }
     }
+
+    console.log('✅ 目標物品確認:', targetItem.name)
 
     // 檢查是否有正在進行的離線訓練
     const existingTraining = await prisma.offlineTraining.findUnique({
@@ -184,9 +203,10 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
       message: '目標訓練已開始',
       training: offlineTraining
     })
-  } catch (error) {
-    console.error('開始目標訓練錯誤:', error)
-    res.status(500).json({ message: '服務器錯誤' })
+  } catch (error: any) {
+    console.error('❌ 開始目標訓練錯誤:', error)
+    console.error('錯誤堆疊:', error.stack)
+    res.status(500).json({ message: '服務器錯誤', detail: error.message })
   }
 }
 
