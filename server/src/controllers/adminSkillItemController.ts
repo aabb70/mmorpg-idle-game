@@ -29,6 +29,8 @@ export const getAllSkillItems = async (req: Request, res: Response) => {
       id: skillItem.id,
       skillType: skillItem.skillType,
       baseSuccessRate: skillItem.baseSuccessRate,
+      minSuccessRate: skillItem.minSuccessRate,
+      maxSuccessRate: skillItem.maxSuccessRate,
       minSkillLevel: skillItem.minSkillLevel,
       maxSkillLevel: skillItem.maxSkillLevel,
       isEnabled: skillItem.isEnabled,
@@ -90,6 +92,8 @@ export const getSkillItemsBySkill = async (req: Request, res: Response) => {
         id: skillItem.id,
         skillType: skillItem.skillType,
         baseSuccessRate: skillItem.baseSuccessRate,
+      minSuccessRate: skillItem.minSuccessRate,
+      maxSuccessRate: skillItem.maxSuccessRate,
         minSkillLevel: skillItem.minSkillLevel,
         maxSkillLevel: skillItem.maxSkillLevel,
         isEnabled: skillItem.isEnabled,
@@ -122,6 +126,8 @@ export const createSkillItem = async (req: Request, res: Response) => {
       skillType,
       itemId,
       baseSuccessRate,
+      minSuccessRate,
+      maxSuccessRate,
       minSkillLevel,
       maxSkillLevel,
       isEnabled
@@ -177,6 +183,8 @@ export const createSkillItem = async (req: Request, res: Response) => {
         skillType: skillType as SkillType,
         itemId,
         baseSuccessRate: parseFloat(baseSuccessRate),
+        minSuccessRate: minSuccessRate ? parseFloat(minSuccessRate) : 0.3,
+        maxSuccessRate: maxSuccessRate ? parseFloat(maxSuccessRate) : 0.8,
         minSkillLevel: parseInt(minSkillLevel) || 1,
         maxSkillLevel: maxSkillLevel ? parseInt(maxSkillLevel) : null,
         isEnabled: isEnabled !== false
@@ -207,6 +215,8 @@ export const updateSkillItem = async (req: Request, res: Response) => {
     const { id } = req.params
     const {
       baseSuccessRate,
+      minSuccessRate,
+      maxSuccessRate,
       minSkillLevel,
       maxSkillLevel,
       isEnabled
@@ -353,6 +363,8 @@ export const migrateSkillItems = async (req: Request, res: Response) => {
     
     const defaultSettings = {
       baseSuccessRate: 0.7,
+      minSuccessRate: 0.3,
+      maxSuccessRate: 0.8,
       minSkillLevel: 1,
       maxSkillLevel: null,
       isEnabled: true
@@ -459,6 +471,12 @@ export const batchUpdateSkillItems = async (req: Request, res: Response) => {
         
         if (baseSuccessRate !== undefined) {
           updateData.baseSuccessRate = parseFloat(baseSuccessRate)
+        }
+        if (minSuccessRate !== undefined) {
+          updateData.minSuccessRate = parseFloat(minSuccessRate)
+        }
+        if (maxSuccessRate !== undefined) {
+          updateData.maxSuccessRate = parseFloat(maxSuccessRate)
         }
         if (minSkillLevel !== undefined) {
           updateData.minSkillLevel = parseInt(minSkillLevel)

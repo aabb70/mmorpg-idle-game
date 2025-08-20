@@ -74,6 +74,8 @@ interface SkillItem {
   id: string
   skillType: string
   baseSuccessRate: number
+  minSuccessRate: number
+  maxSuccessRate: number
   minSkillLevel: number
   maxSkillLevel: number | null
   isEnabled: boolean
@@ -137,6 +139,8 @@ export default function SkillItemEditor() {
     skillType: '',
     itemId: '',
     baseSuccessRate: 0.5,
+    minSuccessRate: 0.3,
+    maxSuccessRate: 0.8,
     minSkillLevel: 1,
     maxSkillLevel: '',
     isEnabled: true
@@ -266,6 +270,8 @@ export default function SkillItemEditor() {
       skillType: skillItem.skillType,
       itemId: skillItem.item.id,
       baseSuccessRate: skillItem.baseSuccessRate,
+      minSuccessRate: skillItem.minSuccessRate,
+      maxSuccessRate: skillItem.maxSuccessRate,
       minSkillLevel: skillItem.minSkillLevel,
       maxSkillLevel: skillItem.maxSkillLevel?.toString() || '',
       isEnabled: skillItem.isEnabled
@@ -284,6 +290,8 @@ export default function SkillItemEditor() {
       skillType: selectedSkillType || '',
       itemId: '',
       baseSuccessRate: 0.5,
+      minSuccessRate: 0.3,
+      maxSuccessRate: 0.8,
       minSkillLevel: 1,
       maxSkillLevel: '',
       isEnabled: true
@@ -378,7 +386,7 @@ export default function SkillItemEditor() {
               <TableCell>技能類型</TableCell>
               <TableCell>物品</TableCell>
               <TableCell>稀有度</TableCell>
-              <TableCell>基礎成功率</TableCell>
+              <TableCell>成功率範圍</TableCell>
               <TableCell>技能等級要求</TableCell>
               <TableCell>狀態</TableCell>
               <TableCell>操作</TableCell>
@@ -416,7 +424,10 @@ export default function SkillItemEditor() {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {Math.round(skillItem.baseSuccessRate * 100)}%
+                    {Math.round(skillItem.minSuccessRate * 100)}% - {Math.round(skillItem.maxSuccessRate * 100)}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    (基礎: {Math.round(skillItem.baseSuccessRate * 100)}%)
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -507,7 +518,54 @@ export default function SkillItemEditor() {
 
             <Box>
               <Typography gutterBottom>
-                基礎成功率: {Math.round(formData.baseSuccessRate * 100)}%
+                成功率範圍: {Math.round(formData.minSuccessRate * 100)}% - {Math.round(formData.maxSuccessRate * 100)}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                最小成功率: {Math.round(formData.minSuccessRate * 100)}%
+              </Typography>
+              <Slider
+                value={formData.minSuccessRate}
+                onChange={(_, value) => setFormData({ 
+                  ...formData, 
+                  minSuccessRate: value as number,
+                  maxSuccessRate: Math.max(formData.maxSuccessRate, value as number)
+                })}
+                min={0}
+                max={1}
+                step={0.05}
+                marks={[
+                  { value: 0, label: '0%' },
+                  { value: 0.5, label: '50%' },
+                  { value: 1, label: '100%' }
+                ]}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${Math.round(value * 100)}%`}
+              />
+              
+              <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
+                最大成功率: {Math.round(formData.maxSuccessRate * 100)}%
+              </Typography>
+              <Slider
+                value={formData.maxSuccessRate}
+                onChange={(_, value) => setFormData({ 
+                  ...formData, 
+                  maxSuccessRate: value as number,
+                  minSuccessRate: Math.min(formData.minSuccessRate, value as number)
+                })}
+                min={0}
+                max={1}
+                step={0.05}
+                marks={[
+                  { value: 0, label: '0%' },
+                  { value: 0.5, label: '50%' },
+                  { value: 1, label: '100%' }
+                ]}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${Math.round(value * 100)}%`}
+              />
+
+              <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
+                基礎成功率: {Math.round(formData.baseSuccessRate * 100)}% (兼容舊系統)
               </Typography>
               <Slider
                 value={formData.baseSuccessRate}
@@ -517,9 +575,7 @@ export default function SkillItemEditor() {
                 step={0.05}
                 marks={[
                   { value: 0, label: '0%' },
-                  { value: 0.25, label: '25%' },
                   { value: 0.5, label: '50%' },
-                  { value: 0.75, label: '75%' },
                   { value: 1, label: '100%' }
                 ]}
                 valueLabelDisplay="auto"

@@ -623,41 +623,64 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
     const craftingSkills = ['SMITHING', 'TAILORING', 'COOKING', 'ALCHEMY']
 
     if (gatheringSkills.includes(skillType)) {
-      // 採集職業：返回可獲得的材料
-      const skillMaterialCategories: Record<string, string[]> = {
-        'MINING': ['METAL'],
-        'LOGGING': ['WOOD'], 
-        'FISHING': ['FISH'],
-        'FORAGING': ['HERB'],
-        'CRAFTING': ['FIBER', 'LIVESTOCK'],
+      // 獲取用戶當前技能等級
+      const userId = req.user?.id
+      let userSkillLevel = 1
+
+      if (userId) {
+        const userSkill = await prisma.skill.findUnique({
+          where: {
+            userId_skillType: {
+              userId: userId,
+              skillType: skillType as any
+            }
+          }
+        })
+        userSkillLevel = userSkill?.level || 1
       }
 
-      const categories = skillMaterialCategories[skillType] || []
-      
-      const items = await prisma.item.findMany({
+      // 採集職業：從SkillItem表獲取可用物品
+      const skillItems = await prisma.skillItem.findMany({
         where: {
-          itemType: 'MATERIAL',
-          category: { in: categories as any[] }
+          skillType: skillType as any,
+          isEnabled: true,
+          minSkillLevel: { lte: userSkillLevel },
+          OR: [
+            { maxSkillLevel: null },
+            { maxSkillLevel: { gte: userSkillLevel } }
+          ]
         },
         include: {
-          tags: {
+          item: {
             include: {
-              tag: true
+              tags: {
+                include: {
+                  tag: true
+                }
+              }
             }
           }
         },
         orderBy: [
-          { rarity: 'asc' },
-          { name: 'asc' }
+          { minSkillLevel: 'asc' },
+          { item: { rarity: 'asc' } },
+          { item: { name: 'asc' } }
         ]
       })
 
       res.json({ 
         type: 'materials',
-        items: items.map(item => ({
-          ...item,
-          tags: item.tags.map(t => t.tag.name)
-        }))
+        items: skillItems.map(skillItem => ({
+          ...skillItem.item,
+          tags: skillItem.item.tags.map(t => t.tag.name),
+          // 添加技能配置信息供前端使用
+          baseSuccessRate: skillItem.baseSuccessRate,
+          minSuccessRate: skillItem.minSuccessRate,
+          maxSuccessRate: skillItem.maxSuccessRate,
+          minSkillLevel: skillItem.minSkillLevel,
+          maxSkillLevel: skillItem.maxSkillLevel
+        })),
+        userSkillLevel
       })
     } else if (craftingSkills.includes(skillType)) {
       // 製作職業：返回可製作的配方
