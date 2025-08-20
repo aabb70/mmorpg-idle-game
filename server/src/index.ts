@@ -87,6 +87,9 @@ app.post('/api/emergency-clean-materials', async (req, res) => {
     
     // 清理舊的材料和相關數據
     await prisma.$transaction(async (tx: any) => {
+      // 先刪除所有離線訓練記錄（避免外鍵約束）
+      await tx.offlineTraining.deleteMany({})
+      
       // 刪除所有背包中的舊材料物品
       await tx.inventoryItem.deleteMany({
         where: {
