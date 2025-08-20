@@ -70,8 +70,11 @@ export default function RecipeEditor() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [items, setItems] = useState<Item[]>([])
   const [tags, setTags] = useState<Tag[]>([])
-  const [skillTypes, setSkillTypes] = useState<string[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  const skillTypes = [
+    'MINING', 'LOGGING', 'FISHING', 'FORAGING', 
+    'SMITHING', 'TAILORING', 'COOKING', 'ALCHEMY', 'CRAFTING'
+  ]
+  const categories = ['FISH', 'WOOD', 'METAL', 'FIBER', 'HERB', 'LIVESTOCK']
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -93,8 +96,6 @@ export default function RecipeEditor() {
     fetchRecipes()
     fetchItems()
     fetchTags()
-    fetchSkillTypes()
-    fetchCategories()
   }, [])
 
   const fetchRecipes = async () => {
@@ -154,41 +155,7 @@ export default function RecipeEditor() {
     }
   }
 
-  const fetchSkillTypes = async () => {
-    try {
-      const token = localStorage.getItem('admin_token')
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/skill-types`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
 
-      if (response.ok) {
-        const data = await response.json()
-        setSkillTypes(data.skillTypes || [])
-      }
-    } catch (error) {
-      console.error('獲取技能類型錯誤:', error)
-    }
-  }
-
-  const fetchCategories = async () => {
-    try {
-      const token = localStorage.getItem('admin_token')
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/categories`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data.categories || [])
-      }
-    } catch (error) {
-      console.error('獲取分類列表錯誤:', error)
-    }
-  }
 
   const handleOpenDialog = (recipe?: Recipe) => {
     if (recipe) {
