@@ -81,6 +81,46 @@ app.post('/api/admin/init-materials', async (req, res) => {
   }
 })
 
+// 調試配方端點 (無需認證)
+app.get('/api/debug-recipes', async (req, res) => {
+  try {
+    const recipes = await prisma.recipe.findMany({
+      include: {
+        item: true,
+        ingredients: {
+          include: {
+            item: true,
+            tag: true
+          }
+        }
+      }
+    })
+
+    res.json({
+      success: true,
+      count: recipes.length,
+      recipes: recipes.map(recipe => ({
+        id: recipe.id,
+        skillType: recipe.skillType,
+        skillLevel: recipe.skillLevel,
+        item: {
+          id: recipe.item.id,
+          name: recipe.item.name,
+          rarity: recipe.item.rarity
+        },
+        ingredients: recipe.ingredients.map(ing => ({
+          quantity: ing.quantity,
+          item: ing.item ? ing.item.name : null,
+          category: ing.category,
+          tag: ing.tag ? ing.tag.name : null
+        }))
+      }))
+    })
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // 診斷物品端點 (無需認證)
 app.get('/api/debug-items', async (req, res) => {
   try {
