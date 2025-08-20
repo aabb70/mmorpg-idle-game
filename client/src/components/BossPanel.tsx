@@ -24,7 +24,7 @@ import {
   CircularProgress,
   Divider
 } from '@mui/material'
-import { Fight, Timer, LocalFireDepartment, Star } from '@mui/icons-material'
+import { SportsMartialArts, Timer, LocalFireDepartment, Star } from '@mui/icons-material'
 import { RootState } from '../store/store'
 import { addNotification } from '../store/slices/gameSlice'
 import { updateUser } from '../store/slices/authSlice'
@@ -272,7 +272,7 @@ export default function BossPanel() {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Fight />
+        <SportsMartialArts />
         Boss 戰鬥
       </Typography>
 
@@ -430,7 +430,7 @@ export default function BossPanel() {
                             fullWidth
                             onClick={handleAttack}
                             disabled={attacking || cooldownRemaining > 0}
-                            startIcon={attacking ? <CircularProgress size={20} /> : <Fight />}
+                            startIcon={attacking ? <CircularProgress size={20} /> : <SportsMartialArts />}
                           >
                             {attacking ? '攻擊中...' : 
                              cooldownRemaining > 0 ? `冷卻中 (${cooldownRemaining}s)` : 
