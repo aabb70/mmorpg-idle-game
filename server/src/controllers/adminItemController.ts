@@ -54,6 +54,7 @@ export const createItem = async (req: Request, res: Response): Promise<void> => 
       category,
       rarity,
       baseValue,
+      healthRestore,
       tags
     } = req.body
 
@@ -75,7 +76,8 @@ export const createItem = async (req: Request, res: Response): Promise<void> => 
         itemType,
         category: category || null,
         rarity: rarity || 'COMMON',
-        baseValue: baseValue || 0
+        baseValue: baseValue || 0,
+        healthRestore: healthRestore || null
       }
     })
 
@@ -139,6 +141,7 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
       category,
       rarity,
       baseValue,
+      healthRestore,
       tags
     } = req.body
 
@@ -173,7 +176,8 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
         itemType,
         category: category || null,
         rarity: rarity || 'COMMON',
-        baseValue: baseValue || 0
+        baseValue: baseValue || 0,
+        healthRestore: healthRestore || null
       }
     })
 

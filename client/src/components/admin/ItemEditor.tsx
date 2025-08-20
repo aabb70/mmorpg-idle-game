@@ -35,6 +35,7 @@ interface Item {
   category: string | null
   rarity: string
   baseValue: number
+  healthRestore?: number
   tags: { id: string; name: string }[]
 }
 
@@ -57,10 +58,11 @@ export default function ItemEditor() {
     category: '',
     rarity: 'COMMON',
     baseValue: 0,
+    healthRestore: '',
     tags: [] as string[]
   })
 
-  const itemTypes = ['MATERIAL', 'EQUIPMENT', 'CONSUMABLE']
+  const itemTypes = ['MATERIAL', 'EQUIPMENT', 'CONSUMABLE', 'FOOD', 'POTION', 'MISC', 'TOOL']
   const categories = ['FISH', 'WOOD', 'METAL', 'FIBER', 'HERB', 'LIVESTOCK']
   const rarities = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
 
@@ -118,6 +120,7 @@ export default function ItemEditor() {
         category: item.category || '',
         rarity: item.rarity,
         baseValue: item.baseValue,
+        healthRestore: item.healthRestore ? item.healthRestore.toString() : '',
         tags: item.tags.map(tag => tag.name)
       })
     } else {
@@ -129,6 +132,7 @@ export default function ItemEditor() {
         category: '',
         rarity: 'COMMON',
         baseValue: 0,
+        healthRestore: '',
         tags: []
       })
     }
@@ -161,7 +165,8 @@ export default function ItemEditor() {
         body: JSON.stringify({
           ...formData,
           category: formData.category || null,
-          baseValue: Number(formData.baseValue)
+          baseValue: Number(formData.baseValue),
+          healthRestore: formData.healthRestore ? Number(formData.healthRestore) : null
         })
       })
 
@@ -256,6 +261,7 @@ export default function ItemEditor() {
               <TableCell>分類</TableCell>
               <TableCell>稀有度</TableCell>
               <TableCell>基礎價值</TableCell>
+              <TableCell>恢復生命值</TableCell>
               <TableCell>標籤</TableCell>
               <TableCell>操作</TableCell>
             </TableRow>
@@ -277,6 +283,15 @@ export default function ItemEditor() {
                   />
                 </TableCell>
                 <TableCell>{item.baseValue}</TableCell>
+                <TableCell>
+                  {item.healthRestore ? (
+                    <Chip
+                      label={`❤️ ${item.healthRestore}`}
+                      size="small"
+                      color="success"
+                    />
+                  ) : '-'}
+                </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {item.tags.map((tag) => (
@@ -383,6 +398,17 @@ export default function ItemEditor() {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="恢復生命值"
+                type="number"
+                value={formData.healthRestore}
+                onChange={(e) => setFormData({ ...formData, healthRestore: e.target.value })}
+                inputProps={{ min: 0 }}
+                helperText="藥劑類物品可設定恢復的生命值數量"
+              />
+            </Grid>
+            <Grid item xs={12}>
               <Autocomplete
                 multiple
                 freeSolo
