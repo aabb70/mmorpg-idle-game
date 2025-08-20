@@ -650,7 +650,7 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
 
     if (gatheringSkills.includes(skillType)) {
       // 獲取用戶當前技能等級
-      const userId = req.user?.id
+      const userId = (req as any).user?.id
       let userSkillLevel = 1
 
       if (userId) {
@@ -670,11 +670,7 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
         where: {
           skillType: skillType as any,
           isEnabled: true,
-          minSkillLevel: { lte: userSkillLevel },
-          OR: [
-            { maxSkillLevel: null },
-            { maxSkillLevel: { gte: userSkillLevel } }
-          ]
+          minSkillLevel: { lte: userSkillLevel }
         },
         include: {
           item: {

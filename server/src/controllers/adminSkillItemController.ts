@@ -139,12 +139,6 @@ export const createSkillItem = async (req: Request, res: Response) => {
     }
 
     // 驗證成功率範圍
-    if (baseSuccessRate !== undefined && (baseSuccessRate < 0 || baseSuccessRate > 1)) {
-      return res.status(400).json({
-        success: false,
-        message: '基礎成功率必須在0到1之間'
-      })
-    }
 
     // 檢查是否已存在相同的技能物品配置
     const existingSkillItem = await prisma.skillItem.findUnique({
@@ -179,11 +173,10 @@ export const createSkillItem = async (req: Request, res: Response) => {
       data: {
         skillType: skillType as SkillType,
         itemId,
-        baseSuccessRate: parseFloat(baseSuccessRate),
         minSuccessRate: minSuccessRate ? parseFloat(minSuccessRate) : 0.3,
         maxSuccessRate: maxSuccessRate ? parseFloat(maxSuccessRate) : 0.8,
         minSkillLevel: parseInt(minSkillLevel) || 1,
-        maxSkillLevel: maxSkillLevel ? parseInt(maxSkillLevel) : null,
+        maxSkillLevel: parseInt(maxSkillLevel) || 50,
         isEnabled: isEnabled !== false
       },
       include: {
@@ -211,7 +204,6 @@ export const updateSkillItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const {
-      baseSuccessRate,
       minSuccessRate,
       maxSuccessRate,
       minSkillLevel,
@@ -220,10 +212,17 @@ export const updateSkillItem = async (req: Request, res: Response) => {
     } = req.body
 
     // 驗證成功率範圍
-    if (baseSuccessRate !== undefined && (baseSuccessRate < 0 || baseSuccessRate > 1)) {
+    if (minSuccessRate !== undefined && (minSuccessRate < 0 || minSuccessRate > 1)) {
       return res.status(400).json({
         success: false,
-        message: '基礎成功率必須在0到1之間'
+        message: '最小成功率必須在0到1之間'
+      })
+    }
+    
+    if (maxSuccessRate !== undefined && (maxSuccessRate < 0 || maxSuccessRate > 1)) {
+      return res.status(400).json({
+        success: false,
+        message: '最大成功率必須在0到1之間'
       })
     }
 
@@ -241,14 +240,17 @@ export const updateSkillItem = async (req: Request, res: Response) => {
 
     const updateData: any = {}
     
-    if (baseSuccessRate !== undefined) {
-      updateData.baseSuccessRate = parseFloat(baseSuccessRate)
+    if (minSuccessRate !== undefined) {
+      updateData.minSuccessRate = parseFloat(minSuccessRate)
+    }
+    if (maxSuccessRate !== undefined) {
+      updateData.maxSuccessRate = parseFloat(maxSuccessRate)
     }
     if (minSkillLevel !== undefined) {
       updateData.minSkillLevel = parseInt(minSkillLevel)
     }
     if (maxSkillLevel !== undefined) {
-      updateData.maxSkillLevel = maxSkillLevel ? parseInt(maxSkillLevel) : null
+      updateData.maxSkillLevel = parseInt(maxSkillLevel) || 50
     }
     if (isEnabled !== undefined) {
       updateData.isEnabled = isEnabled
@@ -359,11 +361,10 @@ export const migrateSkillItems = async (req: Request, res: Response) => {
     }
     
     const defaultSettings = {
-      baseSuccessRate: 0.7,
       minSuccessRate: 0.3,
       maxSuccessRate: 0.8,
       minSkillLevel: 1,
-      maxSkillLevel: null,
+      maxSkillLevel: 50,
       isEnabled: true
     }
     
@@ -461,14 +462,11 @@ export const batchUpdateSkillItems = async (req: Request, res: Response) => {
     const results = []
 
     for (const update of updates) {
-      const { id, baseSuccessRate, minSkillLevel, maxSkillLevel, isEnabled } = update
+      const { id, minSuccessRate, maxSuccessRate, minSkillLevel, maxSkillLevel, isEnabled } = update
 
       try {
         const updateData: any = {}
         
-        if (baseSuccessRate !== undefined) {
-          updateData.baseSuccessRate = parseFloat(baseSuccessRate)
-        }
         if (minSuccessRate !== undefined) {
           updateData.minSuccessRate = parseFloat(minSuccessRate)
         }
@@ -479,7 +477,7 @@ export const batchUpdateSkillItems = async (req: Request, res: Response) => {
           updateData.minSkillLevel = parseInt(minSkillLevel)
         }
         if (maxSkillLevel !== undefined) {
-          updateData.maxSkillLevel = maxSkillLevel ? parseInt(maxSkillLevel) : null
+          updateData.maxSkillLevel = parseInt(maxSkillLevel) || 50
         }
         if (isEnabled !== undefined) {
           updateData.isEnabled = isEnabled

@@ -5,10 +5,13 @@ const prisma = new PrismaClient()
 async function updateMaxSkillLevel() {
   console.log('開始設定最高技能等級...')
   
-  // 設定所有NULL的maxSkillLevel為50
+  // 設定所有小於等於0的maxSkillLevel為50
   const result = await prisma.skillItem.updateMany({
     where: {
-      maxSkillLevel: null
+      OR: [
+        { maxSkillLevel: { lte: 0 } },
+        { maxSkillLevel: undefined }
+      ]
     },
     data: {
       maxSkillLevel: 50

@@ -17,9 +17,10 @@ const skillMaterialCategories: Record<SkillType, MaterialCategory[]> = {
 
 // 預設的成功率和等級要求
 const defaultSkillItemSettings = {
-  baseSuccessRate: 0.7, // 70%基礎成功率
+  minSuccessRate: 0.3, // 30%最小成功率
+  maxSuccessRate: 0.8, // 80%最大成功率
   minSkillLevel: 1,
-  maxSkillLevel: null,
+  maxSkillLevel: 50,
   isEnabled: true
 }
 
