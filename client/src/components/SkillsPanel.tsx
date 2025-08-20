@@ -42,11 +42,11 @@ const skillNames = {
 
 
 const rarityColors = {
-  COMMON: '#757575',
-  UNCOMMON: '#4caf50',
-  RARE: '#2196f3',
-  EPIC: '#9c27b0',
-  LEGENDARY: '#ff9800'
+  COMMON: '#9E9E9E',
+  UNCOMMON: '#4CAF50',
+  RARE: '#2196F3',
+  EPIC: '#9C27B0',
+  LEGENDARY: '#FF6B35'
 }
 
 const rarityNames = {
@@ -262,17 +262,41 @@ export default function SkillsPanel() {
       {/* 離線訓練狀態顯示 */}
       {currentTraining && currentTraining.isActive && (
         <Box sx={{ mb: 3 }}>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="h6">
-              離線訓練中：{skillNames[currentTraining.skillType as SkillType]} - {currentTraining.targetItem.name}
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 2,
+              background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+              border: '2px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 25px rgba(59, 130, 246, 0.2)',
+              '& .MuiAlert-icon': {
+                color: '#60a5fa'
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 700, mb: 1 }}>
+              🔥 離線訓練進行中
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#e0e7ff', mb: 2 }}>
+              {skillNames[currentTraining.skillType as SkillType]} - {currentTraining.targetItem.name}
             </Typography>
             <Box sx={{ mt: 2 }}>
               <LinearProgress 
                 variant="determinate" 
                 value={calculateProgress()} 
-                sx={{ height: 10, borderRadius: 5 }}
+                sx={{ 
+                  height: 12, 
+                  borderRadius: 6,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 6,
+                    background: 'linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%)',
+                    boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)',
+                  }
+                }}
               />
-              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+              <Typography variant="body2" sx={{ mt: 1, display: 'block', color: '#cbd5e1', fontWeight: 600 }}>
                 進度：{currentTraining.completed} / {currentTraining.repetitions} 
                 ({Math.round(calculateProgress())}%)
               </Typography>

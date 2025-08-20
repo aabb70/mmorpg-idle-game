@@ -173,7 +173,20 @@ export default function GamePage() {
               <>
                 <Chip label={`${user.username}`} color="secondary" />
                 <Chip label={`等級 ${user.level}`} color="primary" />
-                <Chip label={`金幣 ${user.gold}`} sx={{ backgroundColor: '#FFD700' }} />
+                <Chip 
+                  label={`💰 ${user.gold.toLocaleString()}`} 
+                  sx={{ 
+                    background: 'linear-gradient(45deg, #FFD700 30%, #FFA000 90%)',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    boxShadow: '0 3px 8px rgba(255, 215, 0, 0.4)',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 4px 12px rgba(255, 215, 0, 0.6)',
+                    },
+                    transition: 'all 0.2s ease-in-out'
+                  }} 
+                />
               </>
             )}
             <Button 

@@ -22,10 +22,10 @@ import { apiClient } from '../utils/api'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
-  UNCOMMON: '#4CAF50',
+  UNCOMMON: '#4CAF50', 
   RARE: '#2196F3',
   EPIC: '#9C27B0',
-  LEGENDARY: '#FF9800',
+  LEGENDARY: '#FF6B35',
 }
 
 // 物品預設價格（根據稀有度）
@@ -145,20 +145,47 @@ export default function InventoryPanel() {
       </Typography>
 
       <Grid container spacing={2}>
-        {items.map((item) => (
+        {items.map((item) => {
+          const rarityColor = rarityColors[item.rarity as keyof typeof rarityColors] || '#9E9E9E'
+          const isLegendary = item.rarity === 'LEGENDARY'
+          const isEpic = item.rarity === 'EPIC'
+          
+          return (
           <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-            <Card>
+            <Card 
+              sx={{
+                ...(isLegendary && {
+                  border: `2px solid ${rarityColor}`,
+                  boxShadow: `0 0 20px ${rarityColor}40, 0 8px 32px rgba(0, 0, 0, 0.3)`,
+                  animation: 'legendary-glow 2s ease-in-out infinite alternate',
+                  '@keyframes legendary-glow': {
+                    '0%': { boxShadow: `0 0 20px ${rarityColor}40, 0 8px 32px rgba(0, 0, 0, 0.3)` },
+                    '100%': { boxShadow: `0 0 30px ${rarityColor}60, 0 12px 40px rgba(0, 0, 0, 0.4)` }
+                  }
+                }),
+                ...(isEpic && {
+                  border: `1px solid ${rarityColor}80`,
+                  boxShadow: `0 0 15px ${rarityColor}30, 0 8px 32px rgba(0, 0, 0, 0.3)`,
+                })
+              }}
+            >
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                  <Typography variant="h6" component="div">
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
                     {item.name}
                   </Typography>
                   <Chip
                     label={item.rarity}
                     size="small"
                     sx={{
-                      backgroundColor: rarityColors[item.rarity as keyof typeof rarityColors],
+                      backgroundColor: rarityColor,
                       color: 'white',
+                      fontWeight: 'bold',
+                      boxShadow: `0 2px 8px ${rarityColor}50`,
+                      ...(isLegendary && {
+                        background: `linear-gradient(45deg, ${rarityColor} 30%, #FFD700 90%)`,
+                        color: '#000',
+                      })
                     }}
                   />
                 </Box>
@@ -197,7 +224,7 @@ export default function InventoryPanel() {
               </CardContent>
             </Card>
           </Grid>
-        ))}
+        )})}
       </Grid>
 
       {/* 販售對話框 */}
