@@ -70,6 +70,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         level: user.level,
         experience: user.experience,
         gold: user.gold,
+        health: user.health,
+        maxHealth: user.maxHealth,
       },
     })
   } catch (error) {
@@ -116,6 +118,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         level: user.level,
         experience: user.experience,
         gold: user.gold,
+        health: user.health,
+        maxHealth: user.maxHealth,
       },
     })
   } catch (error) {
@@ -161,6 +165,8 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         level: user.level,
         experience: user.experience,
         gold: user.gold,
+        health: user.health,
+        maxHealth: user.maxHealth,
       },
       skills: user.skills,
       inventory: user.inventory.map((item: any) => ({

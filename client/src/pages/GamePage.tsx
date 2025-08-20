@@ -99,6 +99,12 @@ export default function GamePage() {
         const data = await response.json()
         console.log('載入用戶資料成功:', data)
         
+        // 更新用戶基本資訊（包含最新的health值）
+        if (data.user) {
+          dispatch(restoreAuth(data.user))
+          console.log('用戶基本資料已更新到 Redux store')
+        }
+        
         // 更新技能資料
         if (data.skills && data.skills.length > 0) {
           dispatch(setSkills(data.skills))
