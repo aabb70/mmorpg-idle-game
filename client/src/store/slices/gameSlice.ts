@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface GameState {
   isConnected: boolean
-  currentView: 'skills' | 'inventory' | 'market' | 'crafting'
+  currentView: 'skills' | 'inventory' | 'market' | 'crafting' | 'boss'
   notifications: string[]
 }
 

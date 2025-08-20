@@ -35,6 +35,9 @@ model User {
   // 離線訓練
   offlineTraining OfflineTraining?
   
+  // Boss 戰鬥
+  bossActions BossAction[]
+  
   @@map("users")
 }
 
@@ -256,4 +259,85 @@ enum Rarity {
   RARE
   EPIC
   LEGENDARY
+}
+
+model Boss {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  
+  // Boss 屬性
+  maxHealth   Int @default(100000)
+  attack      Int @default(100)
+  defense     Int @default(50)
+  level       Int @default(1)
+  
+  // 弱點技能（對這些技能造成額外傷害）
+  weaknessSkills SkillType[]
+  
+  // 掉落獎勵
+  goldReward     Int @default(1000)
+  expReward      Int @default(500)
+  
+  // 外觀
+  imageUrl    String?
+  rarity      Rarity @default(COMMON)
+  
+  // Boss 實例
+  instances   BossInstance[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("bosses")
+}
+
+model BossInstance {
+  id        String @id @default(cuid())
+  bossId    String
+  boss      Boss @relation(fields: [bossId], references: [id], onDelete: Cascade)
+  
+  // 狀態
+  currentHealth Int
+  isActive      Boolean @default(true)
+  isDefeated    Boolean @default(false)
+  
+  // 時間控制
+  startTime     DateTime @default(now())
+  endTime       DateTime
+  
+  // 戰鬥記錄
+  actions       BossAction[]
+  
+  // 擊殺者
+  defeatedBy    String?
+  defeatedAt    DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("boss_instances")
+}
+
+model BossAction {
+  id             String @id @default(cuid())
+  
+  bossInstanceId String
+  bossInstance   BossInstance @relation(fields: [bossInstanceId], references: [id], onDelete: Cascade)
+  
+  userId         String
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 攻擊詳情
+  damage         Int
+  skillUsed      SkillType
+  isCritical     Boolean @default(false)
+  
+  // 玩家狀態（攻擊時）
+  playerLevel    Int
+  skillLevel     Int
+  
+  createdAt      DateTime @default(now())
+  
+  @@map("boss_actions")
 }

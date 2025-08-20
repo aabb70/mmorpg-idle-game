@@ -19,6 +19,7 @@ import { restoreAuth, logout } from '../store/slices/authSlice'
 import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
+import BossPanel from '../components/BossPanel'
 import NotificationSystem from '../components/NotificationSystem'
 import HealthBar from '../components/HealthBar'
 import { socketManager } from '../utils/socket'
@@ -154,6 +155,8 @@ export default function GamePage() {
         return <InventoryPanel />
       case 'market':
         return <MarketPanel />
+      case 'boss':
+        return <BossPanel />
       default:
         return <SkillsPanel />
     }
@@ -226,6 +229,13 @@ export default function GamePage() {
                   variant={currentView === 'market' ? 'contained' : 'outlined'}
                 >
                   市場
+                </Button>
+                <Button
+                  onClick={() => dispatch(setCurrentView('boss'))}
+                  variant={currentView === 'boss' ? 'contained' : 'outlined'}
+                  color="error"
+                >
+                  Boss 戰鬥
                 </Button>
               </ButtonGroup>
             </Paper>

@@ -3,7 +3,7 @@ import cors from 'cors'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import dotenv from 'dotenv'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, SkillType, Rarity } from '@prisma/client'
 
 // 路由導入
 import authRoutes from './routes/auth.js'
@@ -12,6 +12,8 @@ import marketRoutes from './routes/market.js'
 import initRoutes from './routes/init.js'
 import adminRoutes from './routes/admin.js'
 import adminItemRoutes from './routes/adminItems.js'
+import adminBossRoutes from './routes/adminBoss.js'
+import bossRoutes from './routes/boss.js'
 
 dotenv.config()
 
@@ -155,6 +157,108 @@ app.get('/api/debug-items', async (req, res) => {
   }
 })
 
+// 初始化預設 Boss API (無需認證)
+app.post('/api/init-bosses', async (req, res) => {
+  try {
+    console.log('🎯 開始初始化預設 Boss...')
+
+    const defaultBosses = [
+      {
+        name: '森林守衛',
+        description: '保護森林的強大守衛者，對伐木技能較弱',
+        maxHealth: 50000,
+        attack: 80,
+        defense: 30,
+        level: 1,
+        weaknessSkills: [SkillType.LOGGING],
+        goldReward: 500,
+        expReward: 250,
+        rarity: Rarity.COMMON
+      },
+      {
+        name: '礦坑霸主',
+        description: '深居礦坑的巨大生物，懼怕採礦工具',
+        maxHealth: 75000,
+        attack: 120,
+        defense: 50,
+        level: 5,
+        weaknessSkills: [SkillType.MINING],
+        goldReward: 800,
+        expReward: 400,
+        rarity: Rarity.UNCOMMON
+      },
+      {
+        name: '深海海怪',
+        description: '海洋深處的恐怖存在，釣魚高手能更有效對付它',
+        maxHealth: 100000,
+        attack: 150,
+        defense: 70,
+        level: 10,
+        weaknessSkills: [SkillType.FISHING],
+        goldReward: 1200,
+        expReward: 600,
+        rarity: Rarity.RARE
+      },
+      {
+        name: '煉金術師之影',
+        description: '被邪惡煉金術腐蝕的靈魂，對煉金和鍛造技能敏感',
+        maxHealth: 150000,
+        attack: 200,
+        defense: 100,
+        level: 15,
+        weaknessSkills: [SkillType.ALCHEMY, SkillType.SMITHING],
+        goldReward: 2000,
+        expReward: 1000,
+        rarity: Rarity.EPIC
+      },
+      {
+        name: '全能魔王',
+        description: '傳說中的終極Boss，所有技能都能對其造成傷害',
+        maxHealth: 300000,
+        attack: 300,
+        defense: 150,
+        level: 25,
+        weaknessSkills: [SkillType.MINING, SkillType.LOGGING, SkillType.FISHING, SkillType.FORAGING, SkillType.SMITHING, SkillType.TAILORING, SkillType.COOKING, SkillType.ALCHEMY, SkillType.CRAFTING],
+        goldReward: 5000,
+        expReward: 2500,
+        rarity: Rarity.LEGENDARY
+      }
+    ]
+
+    // 檢查是否已有 Boss
+    const existingBossCount = await prisma.boss.count()
+    if (existingBossCount > 0) {
+      console.log(`發現 ${existingBossCount} 個現有 Boss，跳過初始化`)
+      res.json({
+        success: true,
+        message: `已有 ${existingBossCount} 個 Boss，無需初始化`
+      })
+      return
+    }
+
+    // 創建預設 Boss
+    const createdBosses = []
+    for (const bossData of defaultBosses) {
+      const boss = await prisma.boss.create({
+        data: bossData
+      })
+      createdBosses.push(boss)
+      console.log(`✅ 創建 Boss: ${boss.name}`)
+    }
+
+    console.log(`🎉 成功初始化 ${createdBosses.length} 個預設 Boss`)
+
+    res.json({
+      success: true,
+      message: `成功初始化 ${createdBosses.length} 個預設 Boss`,
+      bosses: createdBosses
+    })
+  } catch (error: any) {
+    console.error('❌ 初始化預設 Boss 失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // 緊急清理材料系統 API (無需認證)
 app.post('/api/emergency-clean-materials', async (req, res) => {
   try {
@@ -227,6 +331,8 @@ app.use('/api/market', marketRoutes)
 app.use('/api/init', initRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin', adminItemRoutes)
+app.use('/api/admin', adminBossRoutes)
+app.use('/api/boss', bossRoutes)
 
 // Socket.io 連接處理
 io.on('connection', (socket) => {
