@@ -11,7 +11,6 @@ import {
   createRecipe,
   updateRecipe,
   deleteRecipe,
-  getSkillTypes,
   getMaterialCategories
 } from '../controllers/adminRecipeController.js'
 import {
@@ -20,7 +19,8 @@ import {
   createSkillItem,
   updateSkillItem,
   deleteSkillItem,
-  batchUpdateSkillItems
+  batchUpdateSkillItems,
+  getSkillTypes
 } from '../controllers/adminSkillItemController.js'
 import { authenticateAdmin } from '../middleware/adminAuth.js'
 

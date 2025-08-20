@@ -164,7 +164,7 @@ export default function SkillItemEditor() {
     try {
       setLoading(true)
       const response = await apiClient.get('/admin/skill-items')
-      setSkillItems(response.data.skillItems || [])
+      setSkillItems(response.skillItems || [])
     } catch (error: any) {
       setError('載入技能物品配置失敗')
       console.error(error)
@@ -177,7 +177,7 @@ export default function SkillItemEditor() {
     try {
       setLoading(true)
       const response = await apiClient.get(`/admin/skill-items/${skillType}`)
-      setSkillItems(response.data.skillItems || [])
+      setSkillItems(response.skillItems || [])
     } catch (error: any) {
       setError('載入技能物品配置失敗')
       console.error(error)
@@ -189,7 +189,7 @@ export default function SkillItemEditor() {
   const loadItems = async () => {
     try {
       const response = await apiClient.get('/admin/items')
-      setItems(response.data.items || [])
+      setItems(response.items || [])
     } catch (error: any) {
       console.error('載入物品失敗:', error)
     }
@@ -198,7 +198,7 @@ export default function SkillItemEditor() {
   const loadSkillTypes = async () => {
     try {
       const response = await apiClient.get('/admin/skill-types')
-      setSkillTypes(response.data.skillTypes || [])
+      setSkillTypes(response.skillTypes || [])
     } catch (error: any) {
       console.error('載入技能類型失敗:', error)
     }
