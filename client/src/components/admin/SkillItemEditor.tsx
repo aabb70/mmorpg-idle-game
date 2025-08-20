@@ -37,7 +37,8 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  Sync as SyncIcon
 } from '@mui/icons-material'
 import { apiClient } from '../../utils/api'
 
@@ -125,6 +126,7 @@ export default function SkillItemEditor() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [migrating, setMigrating] = useState(false)
 
   // 對話框狀態
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -288,6 +290,26 @@ export default function SkillItemEditor() {
     })
   }
 
+  const handleMigrate = async () => {
+    if (!confirm('確定要同步現有的技能物品關係嗎？這會將遊戲中現有的技能-物品關係添加到管理系統中。')) return
+
+    try {
+      setMigrating(true)
+      const response = await apiClient.post('/admin/skill-items/migrate')
+      setSuccess(`同步完成！${response.message}`)
+      
+      if (selectedSkillType) {
+        loadSkillItemsBySkill(selectedSkillType)
+      } else {
+        loadSkillItems()
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || '同步失敗')
+    } finally {
+      setMigrating(false)
+    }
+  }
+
   const filteredSkillItems = selectedSkillType 
     ? skillItems.filter(item => item.skillType === selectedSkillType)
     : skillItems
@@ -298,13 +320,23 @@ export default function SkillItemEditor() {
         <Typography variant="h4" component="h1">
           技能物品管理
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
-        >
-          添加技能物品配置
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<SyncIcon />}
+            onClick={handleMigrate}
+            disabled={migrating}
+          >
+            {migrating ? '同步中...' : '同步現有數據'}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleCreate}
+          >
+            添加技能物品配置
+          </Button>
+        </Box>
       </Box>
 
       {error && (

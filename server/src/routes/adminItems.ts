@@ -20,7 +20,8 @@ import {
   updateSkillItem,
   deleteSkillItem,
   batchUpdateSkillItems,
-  getSkillTypes
+  getSkillTypes,
+  migrateSkillItems
 } from '../controllers/adminSkillItemController.js'
 import { authenticateAdmin } from '../middleware/adminAuth.js'
 
@@ -46,6 +47,7 @@ router.post('/skill-items', authenticateAdmin, createSkillItem)
 router.put('/skill-items/:id', authenticateAdmin, updateSkillItem)
 router.delete('/skill-items/:id', authenticateAdmin, deleteSkillItem)
 router.post('/skill-items/batch-update', authenticateAdmin, batchUpdateSkillItems)
+router.post('/skill-items/migrate', authenticateAdmin, migrateSkillItems)
 
 // 輔助數據路由
 router.get('/skill-types', authenticateAdmin, getSkillTypes)

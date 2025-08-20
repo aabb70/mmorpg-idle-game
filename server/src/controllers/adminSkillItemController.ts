@@ -339,6 +339,104 @@ export const getSkillTypes = async (req: Request, res: Response) => {
   }
 }
 
+// 遷移現有技能物品關係
+export const migrateSkillItems = async (req: Request, res: Response) => {
+  try {
+    // 定義技能和材料分類的映射關係
+    const skillMaterialCategories: Record<string, string[]> = {
+      MINING: ['METAL'],
+      LOGGING: ['WOOD'],
+      FISHING: ['FISH'],
+      FORAGING: ['HERB'],
+      CRAFTING: ['FIBER', 'LIVESTOCK'],
+    }
+    
+    const defaultSettings = {
+      baseSuccessRate: 0.7,
+      minSkillLevel: 1,
+      maxSkillLevel: null,
+      isEnabled: true
+    }
+    
+    let totalMigrated = 0
+    const results = []
+    
+    for (const [skillType, categories] of Object.entries(skillMaterialCategories)) {
+      const items = await prisma.item.findMany({
+        where: {
+          itemType: 'MATERIAL',
+          category: { in: categories as any[] }
+        }
+      })
+      
+      for (const item of items) {
+        try {
+          // 檢查是否已存在
+          const existing = await prisma.skillItem.findUnique({
+            where: {
+              skillType_itemId: {
+                skillType: skillType as SkillType,
+                itemId: item.id
+              }
+            }
+          })
+          
+          if (existing) {
+            results.push({ 
+              success: true, 
+              action: 'skipped', 
+              skillType, 
+              itemName: item.name,
+              message: '已存在'
+            })
+            continue
+          }
+          
+          await prisma.skillItem.create({
+            data: {
+              skillType: skillType as SkillType,
+              itemId: item.id,
+              ...defaultSettings
+            }
+          })
+          
+          results.push({ 
+            success: true, 
+            action: 'created', 
+            skillType, 
+            itemName: item.name 
+          })
+          totalMigrated++
+          
+        } catch (error: any) {
+          results.push({ 
+            success: false, 
+            action: 'failed', 
+            skillType, 
+            itemName: item.name, 
+            error: error.message 
+          })
+        }
+      }
+    }
+    
+    return res.json({
+      success: true,
+      message: `遷移完成，創建了 ${totalMigrated} 個技能物品關係`,
+      totalMigrated,
+      results
+    })
+    
+  } catch (error: any) {
+    console.error('遷移技能物品關係失敗:', error)
+    return res.status(500).json({
+      success: false,
+      message: '遷移技能物品關係失敗',
+      error: error.message
+    })
+  }
+}
+
 // 批量更新技能物品配置
 export const batchUpdateSkillItems = async (req: Request, res: Response) => {
   try {
