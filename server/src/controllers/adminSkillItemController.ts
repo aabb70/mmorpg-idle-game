@@ -50,7 +50,7 @@ export const getAllSkillItems = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('獲取技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '獲取技能物品配置失敗',
       error: error.message
@@ -107,7 +107,7 @@ export const getSkillItemsBySkill = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('獲取技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '獲取技能物品配置失敗',
       error: error.message
@@ -136,7 +136,7 @@ export const createSkillItem = async (req: Request, res: Response) => {
     }
 
     // 驗證成功率範圍
-    if (baseSuccessRate < 0 || baseSuccessRate > 1) {
+    if (baseSuccessRate !== undefined && (baseSuccessRate < 0 || baseSuccessRate > 1)) {
       return res.status(400).json({
         success: false,
         message: '基礎成功率必須在0到1之間'
@@ -193,7 +193,7 @@ export const createSkillItem = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('創建技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '創建技能物品配置失敗',
       error: error.message
@@ -262,7 +262,7 @@ export const updateSkillItem = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('更新技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '更新技能物品配置失敗',
       error: error.message
@@ -297,7 +297,7 @@ export const deleteSkillItem = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('刪除技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '刪除技能物品配置失敗',
       error: error.message
@@ -331,7 +331,7 @@ export const getSkillTypes = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('獲取技能類型失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '獲取技能類型失敗',
       error: error.message
@@ -401,7 +401,7 @@ export const batchUpdateSkillItems = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('批量更新技能物品配置失敗:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '批量更新技能物品配置失敗',
       error: error.message
