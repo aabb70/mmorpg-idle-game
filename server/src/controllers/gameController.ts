@@ -663,9 +663,14 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
           }
         })
         userSkillLevel = userSkill?.level || 1
+        console.log(`用戶 ${userId} 的 ${skillType} 技能等級: ${userSkillLevel}`)
+      } else {
+        console.log('未找到用戶ID，使用默認等級1')
       }
 
       // 採集職業：從SkillItem表獲取可用物品
+      console.log(`查詢 ${skillType} 的物品，用戶技能等級: ${userSkillLevel}`)
+      
       const skillItems = await prisma.skillItem.findMany({
         where: {
           skillType: skillType as any,
@@ -688,6 +693,11 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
           { item: { rarity: 'asc' } },
           { item: { name: 'asc' } }
         ]
+      })
+      
+      console.log(`找到 ${skillItems.length} 個符合條件的物品`)
+      skillItems.forEach(item => {
+        console.log(`- ${item.item.name}: 最低等級 ${item.minSkillLevel}, 成功率範圍 ${Math.round(item.minSuccessRate * 100)}%-${Math.round(item.maxSuccessRate * 100)}%`)
       })
 
       res.json({ 
