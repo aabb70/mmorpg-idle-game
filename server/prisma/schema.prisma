@@ -38,6 +38,9 @@ model User {
   // Boss 戰鬥
   bossActions BossAction[]
   
+  // 裝備系統
+  equipments UserEquipment[]
+  
   @@map("users")
 }
 
@@ -64,6 +67,14 @@ model Item {
   baseValue   Int @default(0)
   healthRestore Int? // 恢復生命值數量（藥劑類物品）
   
+  // 裝備屬性
+  equipmentSlot   EquipmentSlot?  // 裝備槽位類型
+  requiredSkill   SkillType?      // 技能裝備需要的技能類型
+  attackBonus     Int @default(0) // 攻擊力加成
+  defenseBonus    Int @default(0) // 防禦力加成
+  healthBonus     Int @default(0) // 生命值加成
+  skillLevelBonus Int @default(0) // 技能等級加成
+  
   // 標籤系統
   tags        ItemTag[]
   
@@ -80,6 +91,9 @@ model Item {
   
   // 技能物品關係
   skillItems SkillItem[]
+  
+  // 用戶裝備關係
+  userEquipments UserEquipment[]
   
   @@map("items")
 }
@@ -222,6 +236,22 @@ model SkillItem {
   @@map("skill_items")
 }
 
+model UserEquipment {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  slot      EquipmentSlot
+  itemId    String?
+  item      Item?  @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, slot])
+  @@map("user_equipments")
+}
+
 enum SkillType {
   MINING     // 採礦
   LOGGING    // 伐木
@@ -259,6 +289,23 @@ enum Rarity {
   RARE
   EPIC
   LEGENDARY
+}
+
+enum EquipmentSlot {
+  HEAD               // 頭部
+  HANDS              // 手部
+  CHEST              // 上衣
+  LEGS               // 下褲
+  CLOAK              // 披風
+  MINING_TOOL        // 採礦工具
+  LOGGING_TOOL       // 伐木工具
+  FISHING_TOOL       // 釣魚工具
+  FORAGING_TOOL      // 採集工具
+  SMITHING_TOOL      // 鍛造工具
+  TAILORING_TOOL     // 裁縫工具
+  COOKING_TOOL       // 廚師工具
+  ALCHEMY_TOOL       // 煉金工具
+  CRAFTING_TOOL      // 工藝工具
 }
 
 model Boss {

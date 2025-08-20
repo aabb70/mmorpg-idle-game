@@ -1,16 +1,59 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
 
-// 計算攻擊傷害
-function calculateDamage(
+// 計算用戶裝備屬性加成的輔助函數
+async function calculatePlayerEquipmentBonuses(userId: string) {
+  const equipments = await prisma.userEquipment.findMany({
+    where: { 
+      userId,
+      itemId: { not: null }
+    },
+    include: {
+      item: true
+    }
+  })
+
+  let bonuses = {
+    attackBonus: 0,
+    defenseBonus: 0,
+    healthBonus: 0,
+    skillBonuses: {} as Record<string, number>
+  }
+
+  equipments.forEach(equipment => {
+    if (equipment.item) {
+      bonuses.attackBonus += equipment.item.attackBonus
+      bonuses.defenseBonus += equipment.item.defenseBonus
+      bonuses.healthBonus += equipment.item.healthBonus
+      
+      // 處理技能等級加成
+      if (equipment.item.skillLevelBonus > 0 && equipment.item.requiredSkill) {
+        const skillKey = equipment.item.requiredSkill
+        bonuses.skillBonuses[skillKey] = (bonuses.skillBonuses[skillKey] || 0) + equipment.item.skillLevelBonus
+      }
+    }
+  })
+
+  return bonuses
+}
+
+// 計算攻擊傷害（考慮裝備加成）
+async function calculateDamage(
+  userId: string,
   playerLevel: number,
   skillLevel: number,
   skillType: string,
   bossWeaknesses: string[],
   bossDefense: number
-): { damage: number, isCritical: boolean } {
-  // 基礎傷害 = 技能等級 * 玩家等級
-  let baseDamage = skillLevel * playerLevel * 5
+): Promise<{ damage: number, isCritical: boolean }> {
+  // 獲取裝備加成
+  const equipmentBonuses = await calculatePlayerEquipmentBonuses(userId)
+  
+  // 應用技能等級加成
+  const effectiveSkillLevel = skillLevel + (equipmentBonuses.skillBonuses[skillType as keyof typeof equipmentBonuses.skillBonuses] || 0)
+  
+  // 基礎傷害 = 有效技能等級 * 玩家等級 + 裝備攻擊加成
+  let baseDamage = effectiveSkillLevel * playerLevel * 5 + equipmentBonuses.attackBonus * 10
   
   // 弱點加成（如果使用的技能是 Boss 的弱點）
   const weaknessMultiplier = bossWeaknesses.includes(skillType) ? 1.5 : 1.0
@@ -18,8 +61,12 @@ function calculateDamage(
   // 隨機因子 (80% - 120%)
   const randomFactor = 0.8 + Math.random() * 0.4
   
-  // 暴擊檢查 (10% 暴擊率)
-  const isCritical = Math.random() < 0.1
+  // 暴擊檢查 (10% 基本暴擊率 + 裝備攻擊力每50點增加1%暴擊率)
+  const baseCriticalChance = 0.1
+  const equipmentCriticalBonus = Math.min(equipmentBonuses.attackBonus / 50 * 0.01, 0.1) // 最多增加10%暴擊率
+  const totalCriticalChance = baseCriticalChance + equipmentCriticalBonus
+  
+  const isCritical = Math.random() < totalCriticalChance
   const criticalMultiplier = isCritical ? 2.0 : 1.0
   
   // 最終傷害計算
@@ -228,8 +275,9 @@ export const attackBoss = async (req: Request, res: Response): Promise<void> => 
       return
     }
     
-    // 計算傷害
-    const { damage, isCritical } = calculateDamage(
+    // 計算傷害（包含裝備加成）
+    const { damage, isCritical } = await calculateDamage(
+      userId,
       user.level,
       skill.level,
       skillType,
@@ -237,8 +285,17 @@ export const attackBoss = async (req: Request, res: Response): Promise<void> => 
       activeBossInstance.boss.defense
     )
     
-    // 戰鬥造成的生命值損失 (10-20%)
-    const healthLoss = Math.floor(user.maxHealth * (0.1 + Math.random() * 0.1))
+    // 獲取裝備防禦加成
+    const equipmentBonuses = await calculatePlayerEquipmentBonuses(userId)
+    
+    // 戰鬥造成的生命值損失 (10-20%)，裝備防禦可以減少損失
+    let baseDamagePercent = 0.1 + Math.random() * 0.1
+    
+    // 防禦加成每10點減少1%傷害，最多減少5%
+    const defenseReduction = Math.min(equipmentBonuses.defenseBonus / 10 * 0.01, 0.05)
+    baseDamagePercent = Math.max(0.02, baseDamagePercent - defenseReduction) // 最少受到2%傷害
+    
+    const healthLoss = Math.floor(user.maxHealth * baseDamagePercent)
     const newHealth = Math.max(0, user.health - healthLoss)
     
     await prisma.$transaction(async (tx) => {

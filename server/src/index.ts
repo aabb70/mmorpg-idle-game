@@ -14,6 +14,7 @@ import adminRoutes from './routes/admin.js'
 import adminItemRoutes from './routes/adminItems.js'
 import adminBossRoutes from './routes/adminBoss.js'
 import bossRoutes from './routes/boss.js'
+import equipmentRoutes from './routes/equipment.js'
 
 dotenv.config()
 
@@ -333,6 +334,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/admin', adminItemRoutes)
 app.use('/api/admin', adminBossRoutes)
 app.use('/api/boss', bossRoutes)
+app.use('/api/equipment', equipmentRoutes)
 
 // Socket.io 連接處理
 io.on('connection', (socket) => {

@@ -36,6 +36,13 @@ interface Item {
   rarity: string
   baseValue: number
   healthRestore?: number
+  // 裝備屬性
+  equipmentSlot?: string
+  requiredSkill?: string
+  attackBonus: number
+  defenseBonus: number
+  healthBonus: number
+  skillLevelBonus: number
   tags: { id: string; name: string }[]
 }
 
@@ -59,12 +66,28 @@ export default function ItemEditor() {
     rarity: 'COMMON',
     baseValue: 0,
     healthRestore: '',
+    // 裝備屬性
+    equipmentSlot: '',
+    requiredSkill: '',
+    attackBonus: 0,
+    defenseBonus: 0,
+    healthBonus: 0,
+    skillLevelBonus: 0,
     tags: [] as string[]
   })
 
   const itemTypes = ['MATERIAL', 'EQUIPMENT', 'CONSUMABLE', 'FOOD', 'POTION', 'MISC', 'TOOL']
   const categories = ['FISH', 'WOOD', 'METAL', 'FIBER', 'HERB', 'LIVESTOCK']
   const rarities = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
+  const equipmentSlots = [
+    '', 'HEAD', 'HANDS', 'CHEST', 'LEGS', 'CLOAK',
+    'MINING_TOOL', 'LOGGING_TOOL', 'FISHING_TOOL', 'FORAGING_TOOL',
+    'SMITHING_TOOL', 'TAILORING_TOOL', 'COOKING_TOOL', 'ALCHEMY_TOOL', 'CRAFTING_TOOL'
+  ]
+  const skillTypes = [
+    '', 'MINING', 'LOGGING', 'FISHING', 'FORAGING',
+    'SMITHING', 'TAILORING', 'COOKING', 'ALCHEMY', 'CRAFTING'
+  ]
 
   useEffect(() => {
     fetchItems()
@@ -121,6 +144,13 @@ export default function ItemEditor() {
         rarity: item.rarity,
         baseValue: item.baseValue,
         healthRestore: item.healthRestore ? item.healthRestore.toString() : '',
+        // 裝備屬性
+        equipmentSlot: item.equipmentSlot || '',
+        requiredSkill: item.requiredSkill || '',
+        attackBonus: item.attackBonus || 0,
+        defenseBonus: item.defenseBonus || 0,
+        healthBonus: item.healthBonus || 0,
+        skillLevelBonus: item.skillLevelBonus || 0,
         tags: item.tags.map(tag => tag.name)
       })
     } else {
@@ -166,7 +196,14 @@ export default function ItemEditor() {
           ...formData,
           category: formData.category || null,
           baseValue: Number(formData.baseValue),
-          healthRestore: formData.healthRestore ? Number(formData.healthRestore) : null
+          healthRestore: formData.healthRestore ? Number(formData.healthRestore) : null,
+          // 裝備屬性
+          equipmentSlot: formData.equipmentSlot || null,
+          requiredSkill: formData.requiredSkill || null,
+          attackBonus: Number(formData.attackBonus),
+          defenseBonus: Number(formData.defenseBonus),
+          healthBonus: Number(formData.healthBonus),
+          skillLevelBonus: Number(formData.skillLevelBonus)
         })
       })
 
@@ -408,6 +445,84 @@ export default function ItemEditor() {
                 helperText="藥劑類物品可設定恢復的生命值數量"
               />
             </Grid>
+
+            {/* 裝備屬性欄位 - 只在物品類型為 EQUIPMENT 時顯示 */}
+            {formData.itemType === 'EQUIPMENT' && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>裝備槽位</InputLabel>
+                    <Select
+                      value={formData.equipmentSlot}
+                      onChange={(e) => setFormData({ ...formData, equipmentSlot: e.target.value })}
+                      label="裝備槽位"
+                    >
+                      {equipmentSlots.map((slot) => (
+                        <MenuItem key={slot} value={slot}>
+                          {slot || '無'}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>需求技能</InputLabel>
+                    <Select
+                      value={formData.requiredSkill}
+                      onChange={(e) => setFormData({ ...formData, requiredSkill: e.target.value })}
+                      label="需求技能"
+                    >
+                      {skillTypes.map((skill) => (
+                        <MenuItem key={skill} value={skill}>
+                          {skill || '無'}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="攻擊力加成"
+                    type="number"
+                    value={formData.attackBonus}
+                    onChange={(e) => setFormData({ ...formData, attackBonus: parseInt(e.target.value) || 0 })}
+                    inputProps={{ min: 0 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="防禦力加成"
+                    type="number"
+                    value={formData.defenseBonus}
+                    onChange={(e) => setFormData({ ...formData, defenseBonus: parseInt(e.target.value) || 0 })}
+                    inputProps={{ min: 0 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="生命值加成"
+                    type="number"
+                    value={formData.healthBonus}
+                    onChange={(e) => setFormData({ ...formData, healthBonus: parseInt(e.target.value) || 0 })}
+                    inputProps={{ min: 0 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="技能等級加成"
+                    type="number"
+                    value={formData.skillLevelBonus}
+                    onChange={(e) => setFormData({ ...formData, skillLevelBonus: parseInt(e.target.value) || 0 })}
+                    inputProps={{ min: 0 }}
+                  />
+                </Grid>
+              </>
+            )}
             <Grid item xs={12}>
               <Autocomplete
                 multiple

@@ -53,6 +53,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       )
     )
 
+    // 為新用戶創建所有裝備槽位
+    const equipmentSlots = [
+      'HEAD', 'HANDS', 'CHEST', 'LEGS', 'CLOAK',
+      'MINING_TOOL', 'LOGGING_TOOL', 'FISHING_TOOL', 'FORAGING_TOOL',
+      'SMITHING_TOOL', 'TAILORING_TOOL', 'COOKING_TOOL', 'ALCHEMY_TOOL', 'CRAFTING_TOOL'
+    ]
+
+    await prisma.userEquipment.createMany({
+      data: equipmentSlots.map(slot => ({
+        userId: user.id,
+        slot: slot as any
+      }))
+    })
+
     // 生成 JWT
     const token = jwt.sign(
       { userId: user.id },
@@ -128,6 +142,42 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 }
 
+// 計算用戶裝備屬性加成的輔助函數
+async function calculateEquipmentBonuses(userId: string) {
+  const equipments = await prisma.userEquipment.findMany({
+    where: { 
+      userId,
+      itemId: { not: null }
+    },
+    include: {
+      item: true
+    }
+  })
+
+  let bonuses = {
+    attackBonus: 0,
+    defenseBonus: 0,
+    healthBonus: 0,
+    skillBonuses: {} as Record<string, number>
+  }
+
+  equipments.forEach(equipment => {
+    if (equipment.item) {
+      bonuses.attackBonus += equipment.item.attackBonus
+      bonuses.defenseBonus += equipment.item.defenseBonus
+      bonuses.healthBonus += equipment.item.healthBonus
+      
+      // 處理技能等級加成
+      if (equipment.item.skillLevelBonus > 0 && equipment.item.requiredSkill) {
+        const skillKey = equipment.item.requiredSkill
+        bonuses.skillBonuses[skillKey] = (bonuses.skillBonuses[skillKey] || 0) + equipment.item.skillLevelBonus
+      }
+    }
+  })
+
+  return bonuses
+}
+
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
@@ -157,18 +207,34 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
       return
     }
 
+    // 計算裝備加成
+    const equipmentBonuses = await calculateEquipmentBonuses(userId)
+
+    // 應用裝備加成到用戶屬性
+    const enhancedUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      level: user.level,
+      experience: user.experience,
+      gold: user.gold,
+      health: user.health,
+      maxHealth: user.maxHealth + equipmentBonuses.healthBonus, // 裝備可以增加最大生命值
+      // 添加計算後的屬性
+      effectiveAttack: equipmentBonuses.attackBonus,
+      effectiveDefense: equipmentBonuses.defenseBonus,
+      equipmentBonuses
+    }
+
+    // 應用技能等級加成到技能
+    const enhancedSkills = user.skills.map(skill => ({
+      ...skill,
+      effectiveLevel: skill.level + (equipmentBonuses.skillBonuses[skill.skillType] || 0)
+    }))
+
     res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        level: user.level,
-        experience: user.experience,
-        gold: user.gold,
-        health: user.health,
-        maxHealth: user.maxHealth,
-      },
-      skills: user.skills,
+      user: enhancedUser,
+      skills: enhancedSkills,
       inventory: user.inventory.map((item: any) => ({
         id: item.item.id,
         name: item.item.name,
@@ -178,6 +244,12 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         category: item.item.category,
         rarity: item.item.rarity,
         baseValue: item.item.baseValue,
+        healthRestore: item.item.healthRestore,
+        equipmentSlot: item.item.equipmentSlot,
+        attackBonus: item.item.attackBonus,
+        defenseBonus: item.item.defenseBonus,
+        healthBonus: item.item.healthBonus,
+        skillLevelBonus: item.item.skillLevelBonus,
         tags: item.item.tags.map((t: any) => ({ name: t.tag.name, description: t.tag.description })),
       })),
     })

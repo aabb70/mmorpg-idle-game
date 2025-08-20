@@ -20,6 +20,7 @@ import { RootState } from '../store/store'
 import { addNotification } from '../store/slices/gameSlice'
 import { updateUser } from '../store/slices/authSlice'
 import { apiClient } from '../utils/api'
+import EquipmentPanel from './EquipmentPanel'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
@@ -192,27 +193,57 @@ export default function InventoryPanel() {
     }
   }
 
-  if (items.length === 0) {
-    return (
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          背包
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          背包是空的。開始訓練技能來獲得物品吧！
-        </Typography>
-      </Paper>
-    )
+  const handleEquipItem = async (item: any) => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        dispatch(addNotification('認證失效，請重新登入'))
+        return
+      }
+
+      const response = await fetch('https://mmorpg-idle-game.onrender.com/api/equipment/equip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          itemId: item.id
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        dispatch(addNotification(data.message))
+        
+        // 重新載入頁面以更新裝備和背包
+        window.location.reload()
+      } else {
+        const errorData = await response.json()
+        dispatch(addNotification(errorData.message || '裝備失敗'))
+      }
+    } catch (error: any) {
+      console.error('裝備物品錯誤:', error)
+      dispatch(addNotification('裝備失敗，請稍後再試'))
+    }
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        背包
-      </Typography>
+    <Grid container spacing={3}>
+      {/* 左側：背包 */}
+      <Grid item xs={12} lg={8}>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            背包
+          </Typography>
 
-      <Grid container spacing={2}>
-        {items.map((item) => {
+          {items.length === 0 ? (
+            <Typography variant="body1" color="text.secondary">
+              背包是空的。開始訓練技能來獲得物品吧！
+            </Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {items.map((item) => {
           const rarityColor = rarityColors[item.rarity as keyof typeof rarityColors] || '#9E9E9E'
           const isLegendary = item.rarity === 'LEGENDARY'
           const isEpic = item.rarity === 'EPIC'
@@ -288,7 +319,20 @@ export default function InventoryPanel() {
                   </Typography>
                 )}
                 
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
+                  {/* 裝備按鈕 - 只對裝備類型物品顯示 */}
+                  {item.itemType === 'EQUIPMENT' && item.equipmentSlot && (
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      size="small"
+                      onClick={() => handleEquipItem(item)}
+                      sx={{ flex: 1, minWidth: '70px' }}
+                    >
+                      裝備
+                    </Button>
+                  )}
+                  
                   {/* 使用物品按鈕 - 只對藥劑類物品顯示 */}
                   {(item.itemType === 'POTION' || item.name.includes('藥') || item.healthRestore) && (
                     <Button
@@ -296,7 +340,7 @@ export default function InventoryPanel() {
                       color="success"
                       size="small"
                       onClick={() => handleUseItem(item)}
-                      sx={{ flex: 1 }}
+                      sx={{ flex: 1, minWidth: '70px' }}
                     >
                       使用
                     </Button>
@@ -307,7 +351,7 @@ export default function InventoryPanel() {
                     color="primary"
                     size="small"
                     onClick={() => handleSellClick(item)}
-                    sx={{ flex: 1 }}
+                    sx={{ flex: 1, minWidth: '70px' }}
                   >
                     販售
                   </Button>
@@ -315,7 +359,15 @@ export default function InventoryPanel() {
               </CardContent>
             </Card>
           </Grid>
-        )})}
+                )
+              })}
+            </Grid>
+        </Paper>
+      </Grid>
+
+      {/* 右側：裝備 */}
+      <Grid item xs={12} lg={4}>
+        <EquipmentPanel />
       </Grid>
 
       {/* 販售對話框 */}
@@ -389,6 +441,6 @@ export default function InventoryPanel() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Grid>
   )
 }
