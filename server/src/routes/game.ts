@@ -3,6 +3,7 @@ import {
   getItems, 
   getRecipes, 
   craftItem, 
+  useItem,
   startTargetedTraining, 
   stopTargetedTraining, 
   getOfflineProgress, 
@@ -18,6 +19,7 @@ router.use(authenticateToken)
 router.get('/items', getItems)
 router.get('/recipes', getRecipes)
 router.post('/craft', craftItem)
+router.post('/use', useItem)
 
 // 目標導向訓練路由
 router.post('/start-targeted-training', startTargetedTraining)

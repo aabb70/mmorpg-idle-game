@@ -21,7 +21,6 @@ import {
 import { RootState } from '../store/store'
 import { addNotification } from '../store/slices/gameSlice'
 import { apiClient } from '../utils/api'
-import ItemIcon from './ItemIcon'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
@@ -225,17 +224,9 @@ export default function MarketPanel() {
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <ItemIcon
-                          itemName={listing.itemName}
-                          rarity={listing.itemRarity}
-                          size={28}
-                          showRarityGlow={true}
-                        />
-                        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-                          {listing.itemName}
-                        </Typography>
-                      </Box>
+                      <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+                        {listing.itemName}
+                      </Typography>
                       {listing.itemRarity && (
                         <Chip
                           label={listing.itemRarity}
@@ -301,17 +292,9 @@ export default function MarketPanel() {
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <ItemIcon
-                          itemName={listing.itemName}
-                          rarity={listing.itemRarity}
-                          size={28}
-                          showRarityGlow={true}
-                        />
-                        <Typography variant="h6" component="div">
-                          {listing.itemName}
-                        </Typography>
-                      </Box>
+                      <Typography variant="h6" component="div">
+                        {listing.itemName}
+                      </Typography>
                       {listing.itemRarity && (
                         <Chip
                           label={listing.itemRarity}

@@ -7,6 +7,8 @@ interface User {
   level: number
   experience: number
   gold: number
+  health: number
+  maxHealth: number
 }
 
 interface AuthState {

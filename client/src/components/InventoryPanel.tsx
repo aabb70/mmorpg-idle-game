@@ -18,9 +18,8 @@ import {
 } from '@mui/material'
 import { RootState } from '../store/store'
 import { addNotification } from '../store/slices/gameSlice'
+import { updateUser } from '../store/slices/authSlice'
 import { apiClient } from '../utils/api'
-import ItemIcon from './ItemIcon'
-import { useInventoryIconPreload } from '../hooks/useIconPreload'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
@@ -54,6 +53,7 @@ interface SellDialogState {
 export default function InventoryPanel() {
   const dispatch = useDispatch()
   const { items } = useSelector((state: RootState) => state.inventory)
+  const { user } = useSelector((state: RootState) => state.auth)
   const [sellDialog, setSellDialog] = useState<SellDialogState>({
     isOpen: false,
     item: null,
@@ -62,8 +62,6 @@ export default function InventoryPanel() {
     isLoading: false
   })
 
-  // 預載入背包物品圖標
-  useInventoryIconPreload()
 
   const handleSellClick = (item: any) => {
     const defaultPrice = getDefaultPrice(item.rarity, item.baseValue || 10)
@@ -130,6 +128,70 @@ export default function InventoryPanel() {
     setSellDialog(prev => ({ ...prev, pricePerUnit: defaultPrice }))
   }
 
+  const handleUseItem = async (item: any) => {
+    if (!user) {
+      dispatch(addNotification('用戶未登入'))
+      return
+    }
+
+    // 檢查是否可以使用此物品
+    if (!item.healthRestore && item.itemType !== 'POTION' && !item.name.includes('藥')) {
+      dispatch(addNotification('此物品無法使用'))
+      return
+    }
+
+    // 檢查生命值是否已滿
+    if (user.health >= user.maxHealth) {
+      dispatch(addNotification('生命值已滿，無需使用治療物品'))
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        dispatch(addNotification('認證失效，請重新登入'))
+        return
+      }
+
+      // 發送使用物品的請求
+      const response = await fetch('https://mmorpg-idle-game.onrender.com/api/game/use', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          itemId: item.id,
+          quantity: 1
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // 計算恢復的生命值
+        const restoreAmount = item.healthRestore || 50 // 預設恢復50點
+        const newHealth = Math.min(user.health + restoreAmount, user.maxHealth)
+        
+        // 更新用戶生命值
+        dispatch(updateUser({ health: newHealth }))
+        
+        // 顯示成功通知
+        dispatch(addNotification(`使用 ${item.name}，恢復了 ${newHealth - user.health} 點生命值！`))
+        
+        // 重新載入背包資料
+        window.location.reload()
+        
+      } else {
+        const errorData = await response.json()
+        dispatch(addNotification(errorData.message || '使用物品失敗'))
+      }
+    } catch (error: any) {
+      console.error('使用物品錯誤:', error)
+      dispatch(addNotification('使用物品失敗，請稍後再試'))
+    }
+  }
+
   if (items.length === 0) {
     return (
       <Paper sx={{ p: 3 }}>
@@ -176,19 +238,9 @@ export default function InventoryPanel() {
             >
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <ItemIcon
-                      itemName={item.name}
-                      itemType={item.itemType}
-                      category={item.category}
-                      rarity={item.rarity}
-                      size={32}
-                      showRarityGlow={true}
-                    />
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-                      {item.name}
-                    </Typography>
-                  </Box>
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+                    {item.name}
+                  </Typography>
                   <Chip
                     label={item.rarity}
                     size="small"
@@ -227,15 +279,39 @@ export default function InventoryPanel() {
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   建議售價：{getDefaultPrice(item.rarity, item.baseValue || 10)} 金幣
                 </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  fullWidth
-                  onClick={() => handleSellClick(item)}
-                >
-                  販售
-                </Button>
+                
+                {/* 顯示物品效果 */}
+                {(item.healthRestore || item.effect) && (
+                  <Typography variant="body2" color="success.main" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    {item.healthRestore && `❤️ 恢復 ${item.healthRestore} 生命值`}
+                    {item.effect && ` ${item.effect}`}
+                  </Typography>
+                )}
+                
+                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                  {/* 使用物品按鈕 - 只對藥劑類物品顯示 */}
+                  {(item.itemType === 'POTION' || item.name.includes('藥') || item.healthRestore) && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      onClick={() => handleUseItem(item)}
+                      sx={{ flex: 1 }}
+                    >
+                      使用
+                    </Button>
+                  )}
+                  
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    onClick={() => handleSellClick(item)}
+                    sx={{ flex: 1 }}
+                  >
+                    販售
+                  </Button>
+                </Box>
               </CardContent>
             </Card>
           </Grid>

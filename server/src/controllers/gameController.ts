@@ -927,3 +927,107 @@ export const craftItem = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: '服務器錯誤' })
   }
 }
+
+export const useItem = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId
+    const { itemId, quantity = 1 } = req.body
+
+    console.log('使用物品請求:', { userId, itemId, quantity })
+
+    // 檢查物品是否存在於背包中
+    const inventoryItem = await prisma.inventoryItem.findUnique({
+      where: {
+        userId_itemId: {
+          userId,
+          itemId
+        }
+      },
+      include: {
+        item: true
+      }
+    })
+
+    if (!inventoryItem || inventoryItem.quantity < quantity) {
+      res.status(400).json({ message: '物品數量不足' })
+      return
+    }
+
+    const item = inventoryItem.item
+
+    // 檢查物品是否可以使用
+    if (!item.healthRestore && item.itemType !== 'POTION' && !item.name.includes('藥')) {
+      res.status(400).json({ message: '此物品無法使用' })
+      return
+    }
+
+    // 獲取用戶當前狀態
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      res.status(404).json({ message: '用戶不存在' })
+      return
+    }
+
+    // 檢查生命值是否已滿
+    if (user.health >= user.maxHealth) {
+      res.status(400).json({ message: '生命值已滿，無需使用治療物品' })
+      return
+    }
+
+    // 計算恢復量
+    const restoreAmount = item.healthRestore || 50 // 預設恢復50點
+    const newHealth = Math.min(user.health + (restoreAmount * quantity), user.maxHealth)
+    const actualRestored = newHealth - user.health
+
+    await prisma.$transaction(async (tx) => {
+      // 消耗物品
+      if (inventoryItem.quantity === quantity) {
+        // 如果用完了就刪除
+        await tx.inventoryItem.delete({
+          where: {
+            userId_itemId: {
+              userId,
+              itemId
+            }
+          }
+        })
+      } else {
+        // 否則減少數量
+        await tx.inventoryItem.update({
+          where: {
+            userId_itemId: {
+              userId,
+              itemId
+            }
+          },
+          data: {
+            quantity: inventoryItem.quantity - quantity
+          }
+        })
+      }
+
+      // 更新用戶生命值
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          health: newHealth
+        }
+      })
+    })
+
+    res.json({
+      message: '物品使用成功',
+      item: item,
+      quantityUsed: quantity,
+      healthRestored: actualRestored,
+      currentHealth: newHealth,
+      maxHealth: user.maxHealth
+    })
+  } catch (error) {
+    console.error('使用物品錯誤:', error)
+    res.status(500).json({ message: '服務器錯誤' })
+  }
+}

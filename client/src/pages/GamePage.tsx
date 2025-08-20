@@ -20,6 +20,7 @@ import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
 import NotificationSystem from '../components/NotificationSystem'
+import HealthBar from '../components/HealthBar'
 import { socketManager } from '../utils/socket'
 import { useNavigate } from 'react-router-dom'
 
@@ -171,6 +172,7 @@ export default function GamePage() {
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {user && (
               <>
+                <HealthBar size="small" variant="compact" showText={false} />
                 <Chip label={`${user.username}`} color="secondary" />
                 <Chip label={`等級 ${user.level}`} color="primary" />
                 <Chip 
