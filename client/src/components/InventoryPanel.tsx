@@ -19,6 +19,8 @@ import {
 import { RootState } from '../store/store'
 import { addNotification } from '../store/slices/gameSlice'
 import { apiClient } from '../utils/api'
+import ItemIcon from './ItemIcon'
+import { useInventoryIconPreload } from '../hooks/useIconPreload'
 
 const rarityColors = {
   COMMON: '#9E9E9E',
@@ -59,6 +61,9 @@ export default function InventoryPanel() {
     pricePerUnit: 0,
     isLoading: false
   })
+
+  // 預載入背包物品圖標
+  useInventoryIconPreload()
 
   const handleSellClick = (item: any) => {
     const defaultPrice = getDefaultPrice(item.rarity, item.baseValue || 10)
@@ -171,9 +176,19 @@ export default function InventoryPanel() {
             >
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                  <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-                    {item.name}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <ItemIcon
+                      itemName={item.name}
+                      itemType={item.itemType}
+                      category={item.category}
+                      rarity={item.rarity}
+                      size={32}
+                      showRarityGlow={true}
+                    />
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+                      {item.name}
+                    </Typography>
+                  </Box>
                   <Chip
                     label={item.rarity}
                     size="small"

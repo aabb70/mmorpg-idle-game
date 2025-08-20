@@ -27,7 +27,8 @@
       "WebFetch(domain:mmorpg-idle-client.netlify.app)",
       "Bash(taskkill:*)",
       "Bash(\"taskkill\" /pid 8376 /f)",
-      "Bash(echo $PORT)"
+      "Bash(echo $PORT)",
+      "Bash(dir /s)"
     ],
     "deny": [],
     "ask": []

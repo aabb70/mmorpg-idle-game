@@ -27,6 +27,8 @@ import { RootState } from '../store/store'
 import { SkillType } from '../store/slices/skillSlice'
 import { addNotification } from '../store/slices/gameSlice'
 import { apiClient } from '../utils/api'
+import ItemIcon from './ItemIcon'
+import { useSkillIconPreload } from '../hooks/useIconPreload'
 
 const skillNames = {
   [SkillType.MINING]: '採礦',
@@ -105,6 +107,9 @@ interface OfflineTraining {
 export default function SkillsPanel() {
   const dispatch = useDispatch()
   const { skills } = useSelector((state: RootState) => state.skills)
+  
+  // 預載入技能相關圖標
+  useSkillIconPreload()
   
   // 標籤狀態
   const [tabValue, setTabValue] = useState(0)
@@ -278,9 +283,17 @@ export default function SkillsPanel() {
             <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 700, mb: 1 }}>
               🔥 離線訓練進行中
             </Typography>
-            <Typography variant="body1" sx={{ color: '#e0e7ff', mb: 2 }}>
-              {skillNames[currentTraining.skillType as SkillType]} - {currentTraining.targetItem.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+              <ItemIcon
+                itemName={currentTraining.targetItem.name}
+                rarity={currentTraining.targetItem.rarity}
+                size={24}
+                showRarityGlow={true}
+              />
+              <Typography variant="body1" sx={{ color: '#e0e7ff' }}>
+                {skillNames[currentTraining.skillType as SkillType]} - {currentTraining.targetItem.name}
+              </Typography>
+            </Box>
             <Box sx={{ mt: 2 }}>
               <LinearProgress 
                 variant="determinate" 
@@ -368,14 +381,21 @@ export default function SkillsPanel() {
                   >
                     {availableItems.map((item) => (
                       <MenuItem key={item.id} value={item.id}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <ItemIcon
+                            itemName={item.name}
+                            itemType={item.itemType}
+                            rarity={item.rarity}
+                            size={20}
+                            showRarityGlow={false}
+                          />
                           <span>{item.name}</span>
                           <Chip 
                             label={rarityNames[item.rarity as keyof typeof rarityNames] || '普通'} 
                             size="small"
                             sx={{ 
                               color: 'white',
-                              backgroundColor: rarityColors[item.rarity as keyof typeof rarityColors] || '#757575'
+                              backgroundColor: rarityColors[item.rarity as keyof typeof rarityColors] || '#FF6B35'
                             }}
                           />
                         </Box>
