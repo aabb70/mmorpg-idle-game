@@ -1,6 +1,7 @@
 import React, { useState, memo } from 'react'
 import { Box, Skeleton } from '@mui/material'
 import { getItemIcon, getRarityFilter, getGameIconUrl } from '../utils/itemIcons'
+import LocalItemIcon from './LocalItemIcon'
 
 interface ItemIconProps {
   itemName: string
@@ -11,6 +12,7 @@ interface ItemIconProps {
   showRarityGlow?: boolean
   className?: string
   style?: React.CSSProperties
+  useLocalIcons?: boolean // 強制使用本地圖標
 }
 
 const ItemIcon: React.FC<ItemIconProps> = memo(({
@@ -21,10 +23,25 @@ const ItemIcon: React.FC<ItemIconProps> = memo(({
   size = 24,
   showRarityGlow = true,
   className = '',
-  style = {}
+  style = {},
+  useLocalIcons = true // 預設使用本地圖標
 }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+
+  // 如果設置為使用本地圖標，直接返回本地圖標組件
+  if (useLocalIcons) {
+    return (
+      <LocalItemIcon
+        itemName={itemName}
+        itemType={itemType}
+        category={category}
+        rarity={rarity}
+        size={size}
+        showRarityGlow={showRarityGlow}
+      />
+    )
+  }
 
   const iconName = getItemIcon(itemName, itemType, category)
   const iconUrl = getGameIconUrl(iconName)
@@ -43,24 +60,16 @@ const ItemIcon: React.FC<ItemIconProps> = memo(({
     setHasError(true)
   }
 
-  // 錯誤時的後備圖標
+  // 錯誤時使用本地圖標
   const fallbackIcon = () => (
-    <Box
-      sx={{
-        width: size,
-        height: size,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '4px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: size * 0.6,
-        color: 'text.secondary',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-      }}
-    >
-      📦
-    </Box>
+    <LocalItemIcon
+      itemName={itemName}
+      itemType={itemType}
+      category={category}
+      rarity={rarity}
+      size={size}
+      showRarityGlow={showRarityGlow}
+    />
   )
 
   const containerStyle: React.CSSProperties = {
