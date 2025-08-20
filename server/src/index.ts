@@ -224,7 +224,7 @@ io.on('connection', (socket) => {
 
 // 啟動服務器
 server.listen(PORT, async () => {
-  console.log(`服務器運行在 http://localhost:${PORT}`)
+  console.log(`🚀 服務器運行在 http://localhost:${PORT}`)
   
   // 檢查資料庫連接
   try {
