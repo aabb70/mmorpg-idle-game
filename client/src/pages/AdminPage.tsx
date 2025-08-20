@@ -12,6 +12,8 @@ import {
 import AdminLoginForm from '../components/admin/AdminLoginForm'
 import UserManagement from '../components/admin/UserManagement'
 import ItemManagement from '../components/admin/ItemManagement'
+import ItemEditor from '../components/admin/ItemEditor'
+import RecipeEditor from '../components/admin/RecipeEditor'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -94,6 +96,8 @@ export default function AdminPage() {
           <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} centered>
             <Tab label="用戶管理" />
             <Tab label="物品發放" />
+            <Tab label="物品編輯器" />
+            <Tab label="配方編輯器" />
           </Tabs>
 
           <TabPanel value={tabValue} index={0}>
@@ -102,6 +106,14 @@ export default function AdminPage() {
 
           <TabPanel value={tabValue} index={1}>
             <ItemManagement />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
+            <ItemEditor />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={3}>
+            <RecipeEditor />
           </TabPanel>
         </Box>
       </Paper>
