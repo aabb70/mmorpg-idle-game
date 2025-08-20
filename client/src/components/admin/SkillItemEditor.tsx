@@ -73,11 +73,10 @@ const rarityColors = {
 interface SkillItem {
   id: string
   skillType: string
-  baseSuccessRate: number
   minSuccessRate: number
   maxSuccessRate: number
   minSkillLevel: number
-  maxSkillLevel: number | null
+  maxSkillLevel: number
   isEnabled: boolean
   item: {
     id: string
@@ -138,11 +137,10 @@ export default function SkillItemEditor() {
   const [formData, setFormData] = useState({
     skillType: '',
     itemId: '',
-    baseSuccessRate: 0.5,
     minSuccessRate: 0.3,
     maxSuccessRate: 0.8,
     minSkillLevel: 1,
-    maxSkillLevel: '',
+    maxSkillLevel: 50,
     isEnabled: true
   })
 
@@ -269,11 +267,10 @@ export default function SkillItemEditor() {
     setFormData({
       skillType: skillItem.skillType,
       itemId: skillItem.item.id,
-      baseSuccessRate: skillItem.baseSuccessRate,
       minSuccessRate: skillItem.minSuccessRate,
       maxSuccessRate: skillItem.maxSuccessRate,
       minSkillLevel: skillItem.minSkillLevel,
-      maxSkillLevel: skillItem.maxSkillLevel?.toString() || '',
+      maxSkillLevel: skillItem.maxSkillLevel,
       isEnabled: skillItem.isEnabled
     })
     setDialogOpen(true)
@@ -289,11 +286,10 @@ export default function SkillItemEditor() {
     setFormData({
       skillType: selectedSkillType || '',
       itemId: '',
-      baseSuccessRate: 0.5,
       minSuccessRate: 0.3,
       maxSuccessRate: 0.8,
       minSkillLevel: 1,
-      maxSkillLevel: '',
+      maxSkillLevel: 50,
       isEnabled: true
     })
   }
@@ -426,9 +422,6 @@ export default function SkillItemEditor() {
                   <Typography variant="body2">
                     {Math.round(skillItem.minSuccessRate * 100)}% - {Math.round(skillItem.maxSuccessRate * 100)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    (基礎: {Math.round(skillItem.baseSuccessRate * 100)}%)
-                  </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
@@ -521,7 +514,7 @@ export default function SkillItemEditor() {
                 成功率範圍: {Math.round(formData.minSuccessRate * 100)}% - {Math.round(formData.maxSuccessRate * 100)}%
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                最小成功率: {Math.round(formData.minSuccessRate * 100)}%
+                最小成功率 (技能等級{formData.minSkillLevel}時): {Math.round(formData.minSuccessRate * 100)}%
               </Typography>
               <Slider
                 value={formData.minSuccessRate}
@@ -543,7 +536,7 @@ export default function SkillItemEditor() {
               />
               
               <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
-                最大成功率: {Math.round(formData.maxSuccessRate * 100)}%
+                最大成功率 (技能等級{formData.maxSkillLevel}時): {Math.round(formData.maxSuccessRate * 100)}%
               </Typography>
               <Slider
                 value={formData.maxSuccessRate}
@@ -552,24 +545,6 @@ export default function SkillItemEditor() {
                   maxSuccessRate: value as number,
                   minSuccessRate: Math.min(formData.minSuccessRate, value as number)
                 })}
-                min={0}
-                max={1}
-                step={0.05}
-                marks={[
-                  { value: 0, label: '0%' },
-                  { value: 0.5, label: '50%' },
-                  { value: 1, label: '100%' }
-                ]}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(value) => `${Math.round(value * 100)}%`}
-              />
-
-              <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
-                基礎成功率: {Math.round(formData.baseSuccessRate * 100)}% (兼容舊系統)
-              </Typography>
-              <Slider
-                value={formData.baseSuccessRate}
-                onChange={(_, value) => setFormData({ ...formData, baseSuccessRate: value as number })}
                 min={0}
                 max={1}
                 step={0.05}
@@ -594,11 +569,11 @@ export default function SkillItemEditor() {
 
             <TextField
               fullWidth
-              label="最高技能等級 (可選)"
+              label="最高技能等級 (達到最大成功率)"
               type="number"
               value={formData.maxSkillLevel}
-              onChange={(e) => setFormData({ ...formData, maxSkillLevel: e.target.value })}
-              helperText="留空表示無上限"
+              onChange={(e) => setFormData({ ...formData, maxSkillLevel: parseInt(e.target.value) || 50 })}
+              helperText="達到此等級時獲得最大成功率"
               inputProps={{ min: 1, max: 100 }}
             />
 

@@ -1,6 +1,32 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
 
+// 計算基於技能等級的實際成功率
+function calculateSuccessRate(
+  userLevel: number,
+  minSkillLevel: number,
+  maxSkillLevel: number,
+  minSuccessRate: number,
+  maxSuccessRate: number
+): number {
+  // 如果用戶等級低於最低要求，返回0
+  if (userLevel < minSkillLevel) {
+    return 0
+  }
+  
+  // 如果用戶等級達到或超過最高等級，返回最大成功率
+  if (userLevel >= maxSkillLevel) {
+    return maxSuccessRate
+  }
+  
+  // 線性插值計算成功率
+  const levelRange = maxSkillLevel - minSkillLevel
+  const successRateRange = maxSuccessRate - minSuccessRate
+  const levelProgress = (userLevel - minSkillLevel) / levelRange
+  
+  return minSuccessRate + (successRateRange * levelProgress)
+}
+
 export const getItems = async (req: Request, res: Response): Promise<void> => {
   try {
     const items = await prisma.item.findMany({
@@ -674,11 +700,18 @@ export const getAvailableItems = async (req: Request, res: Response): Promise<vo
           ...skillItem.item,
           tags: skillItem.item.tags.map(t => t.tag.name),
           // 添加技能配置信息供前端使用
-          baseSuccessRate: skillItem.baseSuccessRate,
           minSuccessRate: skillItem.minSuccessRate,
           maxSuccessRate: skillItem.maxSuccessRate,
           minSkillLevel: skillItem.minSkillLevel,
-          maxSkillLevel: skillItem.maxSkillLevel
+          maxSkillLevel: skillItem.maxSkillLevel,
+          // 計算當前技能等級的實際成功率
+          actualSuccessRate: calculateSuccessRate(
+            userSkillLevel,
+            skillItem.minSkillLevel,
+            skillItem.maxSkillLevel,
+            skillItem.minSuccessRate,
+            skillItem.maxSuccessRate
+          )
         })),
         userSkillLevel
       })

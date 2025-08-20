@@ -194,20 +194,17 @@ model SkillItem {
   itemId       String
   item         Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
   
-  // 基礎成功率 (0.0 - 1.0) - 已棄用，保留向後兼容
-  baseSuccessRate Float   @default(0.5)
-  
-  // 最小成功率 (0.0 - 1.0)
+  // 最小成功率 (0.0 - 1.0) - 技能等級最低時的成功率
   minSuccessRate  Float   @default(0.3)
   
-  // 最大成功率 (0.0 - 1.0) 
+  // 最大成功率 (0.0 - 1.0) - 技能等級最高時的成功率
   maxSuccessRate  Float   @default(0.8)
   
-  // 最低技能等級要求
+  // 最低技能等級要求 - 低於此等級無法獲得此物品
   minSkillLevel   Int     @default(1)
   
-  // 最高技能等級（超過此等級後不能再獲得此物品）
-  maxSkillLevel   Int?
+  // 最高技能等級 - 達到此等級時獲得最大成功率
+  maxSkillLevel   Int     @default(50)
   
   // 是否啟用
   isEnabled       Boolean @default(true)

@@ -28,7 +28,6 @@ export const getAllSkillItems = async (req: Request, res: Response) => {
     const formattedSkillItems = skillItems.map(skillItem => ({
       id: skillItem.id,
       skillType: skillItem.skillType,
-      baseSuccessRate: skillItem.baseSuccessRate,
       minSuccessRate: skillItem.minSuccessRate,
       maxSuccessRate: skillItem.maxSuccessRate,
       minSkillLevel: skillItem.minSkillLevel,
@@ -91,8 +90,7 @@ export const getSkillItemsBySkill = async (req: Request, res: Response) => {
       skillItems: skillItems.map(skillItem => ({
         id: skillItem.id,
         skillType: skillItem.skillType,
-        baseSuccessRate: skillItem.baseSuccessRate,
-      minSuccessRate: skillItem.minSuccessRate,
+        minSuccessRate: skillItem.minSuccessRate,
       maxSuccessRate: skillItem.maxSuccessRate,
         minSkillLevel: skillItem.minSkillLevel,
         maxSkillLevel: skillItem.maxSkillLevel,
@@ -125,7 +123,6 @@ export const createSkillItem = async (req: Request, res: Response) => {
     const {
       skillType,
       itemId,
-      baseSuccessRate,
       minSuccessRate,
       maxSuccessRate,
       minSkillLevel,
