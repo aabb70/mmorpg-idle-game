@@ -173,11 +173,16 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     }
 
     // 創建或更新離線訓練記錄
+    // 注意：資料庫中存儲的是實際物品ID，不是recipe ID
+    const actualTargetItemId = targetItem.id
+    
+    console.log('存儲訓練記錄 - 實際物品ID:', actualTargetItemId, '物品名稱:', targetItem.name)
+    
     const offlineTraining = await prisma.offlineTraining.upsert({
       where: { userId },
       update: {
         skillType,
-        targetItemId,
+        targetItemId: actualTargetItemId,
         repetitions,
         completed: 0,
         startTime: new Date(),
@@ -187,7 +192,7 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
       create: {
         userId,
         skillType,
-        targetItemId,
+        targetItemId: actualTargetItemId,
         repetitions,
         completed: 0,
         startTime: new Date(),
