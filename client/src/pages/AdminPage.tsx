@@ -14,6 +14,7 @@ import UserManagement from '../components/admin/UserManagement'
 import ItemManagement from '../components/admin/ItemManagement'
 import ItemEditor from '../components/admin/ItemEditor'
 import RecipeEditor from '../components/admin/RecipeEditor'
+import SkillItemEditor from '../components/admin/SkillItemEditor'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -98,6 +99,7 @@ export default function AdminPage() {
             <Tab label="物品發放" />
             <Tab label="物品編輯器" />
             <Tab label="配方編輯器" />
+            <Tab label="技能物品管理" />
           </Tabs>
 
           <TabPanel value={tabValue} index={0}>
@@ -114,6 +116,10 @@ export default function AdminPage() {
 
           <TabPanel value={tabValue} index={3}>
             <RecipeEditor />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={4}>
+            <SkillItemEditor />
           </TabPanel>
         </Box>
       </Paper>

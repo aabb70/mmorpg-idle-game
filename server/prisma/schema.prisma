@@ -72,6 +72,9 @@ model Item {
   // 離線訓練目標
   offlineTrainings OfflineTraining[]
   
+  // 技能物品關係
+  skillItems SkillItem[]
+  
   @@map("items")
 }
 
@@ -183,6 +186,31 @@ model OfflineTraining {
   isActive     Boolean  @default(true)
   
   @@map("offline_training")
+}
+
+model SkillItem {
+  id           String    @id @default(cuid())
+  skillType    SkillType
+  itemId       String
+  item         Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  // 基礎成功率 (0.0 - 1.0)
+  baseSuccessRate Float   @default(0.5)
+  
+  // 最低技能等級要求
+  minSkillLevel   Int     @default(1)
+  
+  // 最高技能等級（超過此等級後不能再獲得此物品）
+  maxSkillLevel   Int?
+  
+  // 是否啟用
+  isEnabled       Boolean @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@unique([skillType, itemId])
+  @@map("skill_items")
 }
 
 enum SkillType {

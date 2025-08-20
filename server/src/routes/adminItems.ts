@@ -14,6 +14,14 @@ import {
   getSkillTypes,
   getMaterialCategories
 } from '../controllers/adminRecipeController.js'
+import {
+  getAllSkillItems,
+  getSkillItemsBySkill,
+  createSkillItem,
+  updateSkillItem,
+  deleteSkillItem,
+  batchUpdateSkillItems
+} from '../controllers/adminSkillItemController.js'
 import { authenticateAdmin } from '../middleware/adminAuth.js'
 
 const router = express.Router()
@@ -30,6 +38,14 @@ router.get('/recipes', authenticateAdmin, getAllRecipes)
 router.post('/recipes', authenticateAdmin, createRecipe)
 router.put('/recipes/:id', authenticateAdmin, updateRecipe)
 router.delete('/recipes/:id', authenticateAdmin, deleteRecipe)
+
+// 技能物品管理路由
+router.get('/skill-items', authenticateAdmin, getAllSkillItems)
+router.get('/skill-items/:skillType', authenticateAdmin, getSkillItemsBySkill)
+router.post('/skill-items', authenticateAdmin, createSkillItem)
+router.put('/skill-items/:id', authenticateAdmin, updateSkillItem)
+router.delete('/skill-items/:id', authenticateAdmin, deleteSkillItem)
+router.post('/skill-items/batch-update', authenticateAdmin, batchUpdateSkillItems)
 
 // 輔助數據路由
 router.get('/skill-types', authenticateAdmin, getSkillTypes)
