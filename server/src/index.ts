@@ -80,6 +80,40 @@ app.post('/api/admin/init-materials', async (req, res) => {
   }
 })
 
+// 診斷物品端點 (無需認證)
+app.get('/api/debug-items', async (req, res) => {
+  try {
+    const materials = await prisma.item.findMany({
+      where: { itemType: 'MATERIAL' },
+      include: {
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      },
+      orderBy: [
+        { category: 'asc' },
+        { name: 'asc' }
+      ]
+    })
+
+    res.json({
+      success: true,
+      count: materials.length,
+      materials: materials.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        rarity: item.rarity,
+        tags: item.tags.map(t => t.tag.name)
+      }))
+    })
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // 緊急清理材料系統 API (無需認證)
 app.post('/api/emergency-clean-materials', async (req, res) => {
   try {
