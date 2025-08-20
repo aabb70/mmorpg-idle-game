@@ -84,6 +84,12 @@ interface Item {
   description: string
   rarity: string
   baseValue: number
+  // 從後端 API 返回的技能配置信息
+  actualSuccessRate?: number
+  minSuccessRate?: number
+  maxSuccessRate?: number
+  minSkillLevel?: number
+  maxSkillLevel?: number
 }
 
 interface OfflineTraining {
@@ -205,6 +211,12 @@ export default function SkillsPanel() {
   }
 
   const getSuccessRate = (item: Item, skillLevel: number) => {
+    // 如果後端 API 返回了實際成功率，直接使用
+    if (item.actualSuccessRate !== undefined) {
+      return item.actualSuccessRate
+    }
+    
+    // 否則使用舊的計算邏輯作為備選
     const rarityMultipliers = {
       COMMON: 1,
       UNCOMMON: 0.8,
