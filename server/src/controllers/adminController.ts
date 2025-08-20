@@ -295,7 +295,7 @@ export const cleanAndReinitializeMaterials = async (req: Request, res: Response)
       timestamp: new Date().toISOString()
     })
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ 清理材料系統錯誤:', error)
     res.status(500).json({ message: '清理材料系統失敗', error: error.message })
   }

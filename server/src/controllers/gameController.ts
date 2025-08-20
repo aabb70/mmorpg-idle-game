@@ -271,6 +271,7 @@ async function calculateOfflineProgress(userId: string, training: any) {
   let successfulAttempts = 0
   let actualTime = 3
   let actualSuccessRate = 0.5
+  let attemptsPossible = 0
 
   if (isCraftingSkill) {
     // 製作職業：檢查是否是配方訓練
@@ -354,7 +355,7 @@ async function calculateOfflineProgress(userId: string, training: any) {
     actualTime = 5 * multiplier.time // 製作時間較長
     actualSuccessRate = Math.min(multiplier.success * (1 + skill.level * 0.02), 0.95)
 
-    const attemptsPossible = Math.floor(secondsPassed / actualTime)
+    attemptsPossible = Math.floor(secondsPassed / actualTime)
     const actualAttempts = Math.min(attemptsPossible, maxPossibleCrafts)
     successfulAttempts = Math.floor(actualAttempts * actualSuccessRate)
 
@@ -456,7 +457,7 @@ async function calculateOfflineProgress(userId: string, training: any) {
     actualTime = baseTime * multiplier.time
     actualSuccessRate = Math.min(baseSuccessRate * multiplier.success * (1 + skill.level * 0.05), 0.95)
 
-    const attemptsPossible = Math.floor(secondsPassed / actualTime)
+    attemptsPossible = Math.floor(secondsPassed / actualTime)
     successfulAttempts = Math.floor(attemptsPossible * actualSuccessRate)
   }
 
