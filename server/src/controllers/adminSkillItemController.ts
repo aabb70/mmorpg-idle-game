@@ -44,7 +44,7 @@ export const getAllSkillItems = async (req: Request, res: Response) => {
       }
     }))
 
-    res.json({
+    return res.json({
       success: true,
       skillItems: formattedSkillItems
     })
@@ -84,7 +84,7 @@ export const getSkillItemsBySkill = async (req: Request, res: Response) => {
       ]
     })
 
-    res.json({
+    return res.json({
       success: true,
       skillItems: skillItems.map(skillItem => ({
         id: skillItem.id,
@@ -186,7 +186,7 @@ export const createSkillItem = async (req: Request, res: Response) => {
       }
     })
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: '技能物品配置創建成功',
       skillItem
@@ -255,7 +255,7 @@ export const updateSkillItem = async (req: Request, res: Response) => {
       }
     })
 
-    res.json({
+    return res.json({
       success: true,
       message: '技能物品配置更新成功',
       skillItem: updatedSkillItem
@@ -291,7 +291,7 @@ export const deleteSkillItem = async (req: Request, res: Response) => {
       where: { id }
     })
 
-    res.json({
+    return res.json({
       success: true,
       message: '技能物品配置刪除成功'
     })
@@ -322,7 +322,7 @@ export const getSkillTypes = async (req: Request, res: Response) => {
       CRAFTING: '工藝'
     }
 
-    res.json({
+    return res.json({
       success: true,
       skillTypes: skillTypes.map(type => ({
         value: type,
@@ -394,7 +394,7 @@ export const batchUpdateSkillItems = async (req: Request, res: Response) => {
       }
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: '批量更新完成',
       results
