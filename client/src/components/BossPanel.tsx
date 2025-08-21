@@ -41,6 +41,7 @@ interface Boss {
   goldReward: number
   expReward: number
   rarity: string
+  imageUrl?: string
 }
 
 interface BossInstance {
@@ -303,8 +304,32 @@ export default function BossPanel() {
             }}
           >
             <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2, gap: 2 }}>
+                {/* Boss 圖片 */}
+                {boss.imageUrl && (
+                  <Box sx={{ flexShrink: 0 }}>
+                    <Box
+                      component="img"
+                      src={boss.imageUrl}
+                      alt={boss.name}
+                      sx={{
+                        width: 120,
+                        height: 120,
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        border: `3px solid ${rarityColor}`,
+                        boxShadow: `0 0 20px ${rarityColor}40`
+                      }}
+                      onError={(e) => {
+                        // 如果圖片載入失敗，隱藏圖片
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  </Box>
+                )}
+                
+                {/* Boss 基本信息 */}
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
                     {boss.name}
                   </Typography>
@@ -312,7 +337,9 @@ export default function BossPanel() {
                     {boss.description}
                   </Typography>
                 </Box>
-                <Box sx={{ textAlign: 'right' }}>
+                
+                {/* 稀有度和等級 */}
+                <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
                   <Chip
                     label={boss.rarity}
                     sx={{
