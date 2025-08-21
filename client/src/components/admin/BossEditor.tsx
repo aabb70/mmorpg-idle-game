@@ -205,6 +205,7 @@ export default function BossEditor({ bossId, onSave, onCancel }: BossEditorProps
           weaknessSkills: boss.weaknessSkills,
           goldReward: boss.goldReward,
           expReward: boss.expReward,
+          imageUrl: boss.imageUrl,
           rarity: boss.rarity
         })
       })
