@@ -43,6 +43,7 @@ interface Boss {
   goldReward: number
   expReward: number
   rarity: string
+  imageUrl?: string
   itemDrops?: any[]
 }
 

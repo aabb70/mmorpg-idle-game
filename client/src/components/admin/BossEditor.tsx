@@ -44,6 +44,7 @@ interface Boss {
   goldReward: number
   expReward: number
   rarity: string
+  imageUrl?: string
   itemDrops?: BossItemDrop[]
 }
 
@@ -111,6 +112,7 @@ export default function BossEditor({ bossId, onSave, onCancel }: BossEditorProps
     goldReward: 1000,
     expReward: 500,
     rarity: 'COMMON',
+    imageUrl: '',
     itemDrops: []
   })
   
@@ -365,6 +367,17 @@ export default function BossEditor({ bossId, onSave, onCancel }: BossEditorProps
                     label="描述"
                     value={boss.description}
                     onChange={(e) => setBoss({...boss, description: e.target.value})}
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="圖片URL"
+                    value={boss.imageUrl || ''}
+                    onChange={(e) => setBoss({...boss, imageUrl: e.target.value})}
+                    placeholder="/images/bosses/boss_name.webp"
+                    helperText="圖片路徑，例如：/images/bosses/alchemist_boss.webp 或 /images/bosses/forest_guardian.webp"
                   />
                 </Grid>
                 
