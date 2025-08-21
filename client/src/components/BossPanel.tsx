@@ -101,6 +101,7 @@ const rarityColors = {
 export default function BossPanel() {
   const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
+  const { skills } = useSelector((state: RootState) => state.skills)
   const [bossData, setBossData] = useState<BossData | null>(null)
   const [loading, setLoading] = useState(false)
   const [attacking, setAttacking] = useState(false)
@@ -429,10 +430,17 @@ export default function BossPanel() {
                             >
                               {Object.entries(skillNames).map(([skill, name]) => (
                                 <MenuItem key={skill} value={skill}>
-                                  {name}
-                                  {boss.weaknessSkills.includes(skill) && (
-                                    <Chip size="small" label="弱點" color="warning" sx={{ ml: 1 }} />
-                                  )}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      {name}
+                                      <Typography variant="caption" color="text.secondary">
+                                        (Lv.{skills[skill as keyof typeof skills]?.level || 1})
+                                      </Typography>
+                                    </Box>
+                                    {boss.weaknessSkills.includes(skill) && (
+                                      <Chip size="small" label="弱點" color="warning" />
+                                    )}
+                                  </Box>
                                 </MenuItem>
                               ))}
                             </Select>
