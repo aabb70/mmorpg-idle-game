@@ -276,6 +276,22 @@ export default function BossPanel() {
         Boss 戰鬥
       </Typography>
 
+      {/* 獎勵規則說明 */}
+      <Alert severity="info" sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          🏆 Boss戰鬥獎勵規則
+        </Typography>
+        <Box component="ul" sx={{ pl: 2, mb: 1 }}>
+          <li><strong>按傷害貢獻分配</strong>：獎勵根據你對Boss造成的傷害比例分配</li>
+          <li><strong>擊殺者額外獎勵</strong>：給予Boss最後一擊的玩家額外獲得20%金幣和經驗</li>
+          <li><strong>團隊合作</strong>：所有參與攻擊的玩家都能獲得獎勵</li>
+          <li><strong>裝備加成</strong>：裝備的攻擊力和技能加成會影響傷害輸出</li>
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          💡 小貼士：使用Boss弱點技能可造成1.5倍傷害！
+        </Typography>
+      </Alert>
+
       <Grid container spacing={3}>
         {/* Boss 信息 */}
         <Grid item xs={12} md={8}>

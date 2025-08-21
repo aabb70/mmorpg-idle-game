@@ -347,6 +347,12 @@ export const attackBoss = async (req: Request, res: Response): Promise<void> => 
         
         const totalDamage = participants.reduce((sum, p) => sum + (p._sum.damage || 0), 0)
         
+        // 獲取Boss的物品掉落設置
+        const bossDrops = await tx.bossItemDrop.findMany({
+          where: { bossId: activeBossInstance.bossId },
+          include: { item: true }
+        })
+        
         // 分發獎勵給所有參與者
         for (const participant of participants) {
           const damageContribution = (participant._sum.damage || 0) / totalDamage
@@ -365,6 +371,55 @@ export const attackBoss = async (req: Request, res: Response): Promise<void> => 
               experience: { increment: expReward + bonusExp }
             }
           })
+          
+          // 處理物品掉落
+          for (const drop of bossDrops) {
+            // 檢查是否只給擊殺者
+            if (drop.killerOnly && !isKiller) {
+              continue
+            }
+            
+            // 隨機掉落判定
+            const randomValue = Math.random()
+            if (randomValue <= drop.dropRate) {
+              // 隨機掉落數量
+              const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity
+              
+              // 檢查用戶是否已有該物品
+              const existingItem = await tx.inventoryItem.findUnique({
+                where: {
+                  userId_itemId: {
+                    userId: participant.userId,
+                    itemId: drop.itemId
+                  }
+                }
+              })
+              
+              if (existingItem) {
+                // 增加現有物品數量
+                await tx.inventoryItem.update({
+                  where: {
+                    userId_itemId: {
+                      userId: participant.userId,
+                      itemId: drop.itemId
+                    }
+                  },
+                  data: {
+                    quantity: { increment: quantity }
+                  }
+                })
+              } else {
+                // 創建新的物品記錄
+                await tx.inventoryItem.create({
+                  data: {
+                    userId: participant.userId,
+                    itemId: drop.itemId,
+                    quantity
+                  }
+                })
+              }
+            }
+          }
         }
       }
     })

@@ -5,7 +5,10 @@ import {
   updateBoss,
   deleteBoss,
   createBossInstance,
-  initDefaultBosses
+  initDefaultBosses,
+  addBossItemDrop,
+  updateBossItemDrop,
+  deleteBossItemDrop
 } from '../controllers/adminBossController.js'
 import { authenticateAdmin } from '../middleware/adminAuth.js'
 
@@ -25,5 +28,10 @@ router.post('/boss-instance', createBossInstance)
 
 // 初始化預設 Boss
 router.post('/init-bosses', initDefaultBosses)
+
+// Boss 物品掉落管理
+router.post('/bosses/:bossId/drops', addBossItemDrop)
+router.put('/boss-drops/:dropId', updateBossItemDrop)
+router.delete('/boss-drops/:dropId', deleteBossItemDrop)
 
 export default router

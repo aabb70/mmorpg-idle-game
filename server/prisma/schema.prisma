@@ -95,6 +95,9 @@ model Item {
   // 用戶裝備關係
   userEquipments UserEquipment[]
   
+  // Boss掉落關係
+  bossDrops BossItemDrop[]
+  
   @@map("items")
 }
 
@@ -333,6 +336,9 @@ model Boss {
   // Boss 實例
   instances   BossInstance[]
   
+  // 物品掉落
+  itemDrops   BossItemDrop[]
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -387,4 +393,29 @@ model BossAction {
   createdAt      DateTime @default(now())
   
   @@map("boss_actions")
+}
+
+model BossItemDrop {
+  id        String @id @default(cuid())
+  bossId    String
+  boss      Boss @relation(fields: [bossId], references: [id], onDelete: Cascade)
+  
+  itemId    String
+  item      Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  // 掉落機率 (0.0 - 1.0)
+  dropRate  Float @default(0.1)
+  
+  // 掉落數量範圍
+  minQuantity Int @default(1)
+  maxQuantity Int @default(1)
+  
+  // 是否只給擊殺者
+  killerOnly Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([bossId, itemId])
+  @@map("boss_item_drops")
 }

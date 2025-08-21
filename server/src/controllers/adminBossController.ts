@@ -7,6 +7,13 @@ const prisma = new PrismaClient()
 export const getAllBosses = async (req: Request, res: Response): Promise<void> => {
   try {
     const bosses = await prisma.boss.findMany({
+      include: {
+        itemDrops: {
+          include: {
+            item: true
+          }
+        }
+      },
       orderBy: [
         { level: 'asc' },
         { rarity: 'asc' },
@@ -345,6 +352,142 @@ export const initDefaultBosses = async (req: Request, res: Response): Promise<vo
     })
   } catch (error: any) {
     console.error('❌ 初始化預設 Boss 失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+// 添加 Boss 物品掉落
+export const addBossItemDrop = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { bossId } = req.params
+    const { itemId, dropRate, minQuantity, maxQuantity, killerOnly } = req.body
+
+    // 檢查 Boss 是否存在
+    const boss = await prisma.boss.findUnique({
+      where: { id: bossId }
+    })
+
+    if (!boss) {
+      res.status(404).json({ success: false, error: 'Boss 不存在' })
+      return
+    }
+
+    // 檢查物品是否存在
+    const item = await prisma.item.findUnique({
+      where: { id: itemId }
+    })
+
+    if (!item) {
+      res.status(404).json({ success: false, error: '物品不存在' })
+      return
+    }
+
+    // 檢查是否已經存在相同的掉落設置
+    const existingDrop = await prisma.bossItemDrop.findUnique({
+      where: {
+        bossId_itemId: {
+          bossId,
+          itemId
+        }
+      }
+    })
+
+    if (existingDrop) {
+      res.status(400).json({ success: false, error: '該物品掉落已存在' })
+      return
+    }
+
+    // 創建掉落設置
+    const itemDrop = await prisma.bossItemDrop.create({
+      data: {
+        bossId,
+        itemId,
+        dropRate: parseFloat(dropRate) || 0.1,
+        minQuantity: parseInt(minQuantity) || 1,
+        maxQuantity: parseInt(maxQuantity) || 1,
+        killerOnly: Boolean(killerOnly)
+      },
+      include: {
+        item: true
+      }
+    })
+
+    res.json({
+      success: true,
+      itemDrop
+    })
+  } catch (error: any) {
+    console.error('添加 Boss 物品掉落失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+// 更新 Boss 物品掉落
+export const updateBossItemDrop = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { dropId } = req.params
+    const { dropRate, minQuantity, maxQuantity, killerOnly } = req.body
+
+    // 檢查掉落設置是否存在
+    const existingDrop = await prisma.bossItemDrop.findUnique({
+      where: { id: dropId }
+    })
+
+    if (!existingDrop) {
+      res.status(404).json({ success: false, error: '掉落設置不存在' })
+      return
+    }
+
+    // 更新掉落設置
+    const updatedDrop = await prisma.bossItemDrop.update({
+      where: { id: dropId },
+      data: {
+        dropRate: parseFloat(dropRate) || existingDrop.dropRate,
+        minQuantity: parseInt(minQuantity) || existingDrop.minQuantity,
+        maxQuantity: parseInt(maxQuantity) || existingDrop.maxQuantity,
+        killerOnly: Boolean(killerOnly)
+      },
+      include: {
+        item: true
+      }
+    })
+
+    res.json({
+      success: true,
+      itemDrop: updatedDrop
+    })
+  } catch (error: any) {
+    console.error('更新 Boss 物品掉落失敗:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+// 刪除 Boss 物品掉落
+export const deleteBossItemDrop = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { dropId } = req.params
+
+    // 檢查掉落設置是否存在
+    const existingDrop = await prisma.bossItemDrop.findUnique({
+      where: { id: dropId }
+    })
+
+    if (!existingDrop) {
+      res.status(404).json({ success: false, error: '掉落設置不存在' })
+      return
+    }
+
+    // 刪除掉落設置
+    await prisma.bossItemDrop.delete({
+      where: { id: dropId }
+    })
+
+    res.json({
+      success: true,
+      message: '掉落設置已刪除'
+    })
+  } catch (error: any) {
+    console.error('刪除 Boss 物品掉落失敗:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 }
