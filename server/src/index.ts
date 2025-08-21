@@ -16,6 +16,7 @@ import adminBossRoutes from './routes/adminBoss.js'
 import bossRoutes from './routes/boss.js'
 import equipmentRoutes from './routes/equipment.js'
 import bossSettingsRoutes from './routes/bossSettings.js'
+import chatRoutes from './routes/chat.js'
 import { checkAndSwitchBoss } from './controllers/bossSettingsController.js'
 
 dotenv.config()
@@ -339,6 +340,10 @@ app.use('/api/admin', adminBossRoutes)
 app.use('/api/admin/boss', bossSettingsRoutes)
 app.use('/api/boss', bossRoutes)
 app.use('/api/equipment', equipmentRoutes)
+app.use('/api/chat', chatRoutes)
+
+// 將io實例設置到app中，供控制器使用
+app.set('io', io)
 
 // Socket.io 連接處理
 io.on('connection', (socket) => {

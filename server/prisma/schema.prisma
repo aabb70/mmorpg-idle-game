@@ -41,6 +41,9 @@ model User {
   // 裝備系統
   equipments UserEquipment[]
   
+  // 聊天消息
+  chatMessages ChatMessage[]
+  
   @@map("users")
 }
 
@@ -443,4 +446,33 @@ enum BossSelectionMode {
   RANDOM      // 隨機選擇
   SEQUENTIAL  // 按等級順序
   WEIGHTED    // 按稀有度權重
+}
+
+model ChatMessage {
+  id        String @id @default(cuid())
+  
+  // 發送者
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 消息內容
+  content   String
+  messageType ChatMessageType @default(GENERAL)
+  
+  // 時間戳
+  createdAt DateTime @default(now())
+  
+  // 是否被管理員刪除
+  isDeleted Boolean @default(false)
+  deletedBy String?
+  deletedAt DateTime?
+  
+  @@map("chat_messages")
+}
+
+enum ChatMessageType {
+  GENERAL     // 一般聊天
+  SYSTEM      // 系統訊息
+  BOSS_DEFEAT // Boss擊敗公告
+  LEVEL_UP    // 升級公告
 }

@@ -20,6 +20,7 @@ import SkillsPanel from '../components/SkillsPanel'
 import InventoryPanel from '../components/InventoryPanel'
 import MarketPanel from '../components/MarketPanel'
 import BossPanel from '../components/BossPanel'
+import ChatPanel from '../components/ChatPanel'
 import NotificationSystem from '../components/NotificationSystem'
 import HealthBar from '../components/HealthBar'
 import { socketManager } from '../utils/socket'
@@ -163,6 +164,8 @@ export default function GamePage() {
         return <MarketPanel />
       case 'boss':
         return <BossPanel />
+      case 'chat':
+        return <ChatPanel />
       default:
         return <SkillsPanel />
     }
@@ -243,12 +246,21 @@ export default function GamePage() {
                 >
                   Boss 戰鬥
                 </Button>
+                <Button
+                  onClick={() => dispatch(setCurrentView('chat'))}
+                  variant={currentView === 'chat' ? 'contained' : 'outlined'}
+                  color="info"
+                >
+                  聊天室
+                </Button>
               </ButtonGroup>
             </Paper>
           </Grid>
 
           <Grid item xs={12}>
-            {renderCurrentView()}
+            <Box sx={{ height: currentView === 'chat' ? '600px' : 'auto' }}>
+              {renderCurrentView()}
+            </Box>
           </Grid>
         </Grid>
       </Box>
