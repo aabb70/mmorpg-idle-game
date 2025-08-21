@@ -55,6 +55,13 @@ export const createItem = async (req: Request, res: Response): Promise<void> => 
       rarity,
       baseValue,
       healthRestore,
+      // 裝備屬性
+      equipmentSlot,
+      requiredSkill,
+      attackBonus,
+      defenseBonus,
+      healthBonus,
+      skillLevelBonus,
       tags
     } = req.body
 
@@ -77,7 +84,14 @@ export const createItem = async (req: Request, res: Response): Promise<void> => 
         category: category || null,
         rarity: rarity || 'COMMON',
         baseValue: baseValue || 0,
-        healthRestore: healthRestore || null
+        healthRestore: healthRestore || null,
+        // 裝備屬性
+        equipmentSlot: equipmentSlot || null,
+        requiredSkill: requiredSkill || null,
+        attackBonus: attackBonus || 0,
+        defenseBonus: defenseBonus || 0,
+        healthBonus: healthBonus || 0,
+        skillLevelBonus: skillLevelBonus || 0
       }
     })
 
@@ -142,6 +156,13 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
       rarity,
       baseValue,
       healthRestore,
+      // 裝備屬性
+      equipmentSlot,
+      requiredSkill,
+      attackBonus,
+      defenseBonus,
+      healthBonus,
+      skillLevelBonus,
       tags
     } = req.body
 
@@ -177,7 +198,14 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
         category: category || null,
         rarity: rarity || 'COMMON',
         baseValue: baseValue || 0,
-        healthRestore: healthRestore || null
+        healthRestore: healthRestore || null,
+        // 裝備屬性
+        equipmentSlot: equipmentSlot || null,
+        requiredSkill: requiredSkill || null,
+        attackBonus: attackBonus || 0,
+        defenseBonus: defenseBonus || 0,
+        healthBonus: healthBonus || 0,
+        skillLevelBonus: skillLevelBonus || 0
       }
     })
 
