@@ -163,6 +163,13 @@ export default function ItemEditor() {
         rarity: 'COMMON',
         baseValue: 0,
         healthRestore: '',
+        // 裝備屬性
+        equipmentSlot: '',
+        requiredSkill: '',
+        attackBonus: 0,
+        defenseBonus: 0,
+        healthBonus: 0,
+        skillLevelBonus: 0,
         tags: []
       })
     }
