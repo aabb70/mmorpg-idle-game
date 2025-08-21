@@ -35,8 +35,9 @@ const PORT = process.env.PORT || 5000
 // 更新CORS設置以允許生產環境域名
 app.use(cors({
   origin: ["http://localhost:3000", "https://bespoke-lolly-ce99b9.netlify.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true
 }))
 app.use(express.json())
 
