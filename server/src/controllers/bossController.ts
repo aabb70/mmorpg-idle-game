@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { prisma } from '../index.js'
+import { checkAndSwitchBoss } from './bossSettingsController.js'
 
 // 計算用戶裝備屬性加成的輔助函數
 async function calculatePlayerEquipmentBonuses(userId: string) {
@@ -421,6 +422,18 @@ export const attackBoss = async (req: Request, res: Response): Promise<void> => 
             }
           }
         }
+      }
+      
+      // 如果Boss被擊敗，觸發自動切換檢查
+      if (isDefeated) {
+        // 異步執行自動切換檢查，不阻塞回應
+        setTimeout(async () => {
+          try {
+            await checkAndSwitchBoss()
+          } catch (error) {
+            console.error('Boss自動切換檢查失敗:', error)
+          }
+        }, 5000) // 5秒後檢查，給系統一些緩衝時間
       }
     })
     

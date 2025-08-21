@@ -419,3 +419,28 @@ model BossItemDrop {
   @@unique([bossId, itemId])
   @@map("boss_item_drops")
 }
+
+model BossSettings {
+  id                    String @id @default(cuid())
+  
+  // 自動切換設置
+  autoSwitchEnabled     Boolean @default(true)
+  autoSwitchDelayHours  Int @default(1)        // Boss被擊敗後多久自動切換下一個 (小時)
+  
+  // Boss實例持續時間
+  defaultDurationHours  Int @default(24)       // 新Boss實例的預設持續時間 (小時)
+  
+  // Boss選擇規則
+  bossSelectionMode     BossSelectionMode @default(RANDOM)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("boss_settings")
+}
+
+enum BossSelectionMode {
+  RANDOM      // 隨機選擇
+  SEQUENTIAL  // 按等級順序
+  WEIGHTED    // 按稀有度權重
+}

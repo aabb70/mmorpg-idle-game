@@ -15,6 +15,8 @@ import adminItemRoutes from './routes/adminItems.js'
 import adminBossRoutes from './routes/adminBoss.js'
 import bossRoutes from './routes/boss.js'
 import equipmentRoutes from './routes/equipment.js'
+import bossSettingsRoutes from './routes/bossSettings.js'
+import { checkAndSwitchBoss } from './controllers/bossSettingsController.js'
 
 dotenv.config()
 
@@ -333,6 +335,7 @@ app.use('/api/init', initRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin', adminItemRoutes)
 app.use('/api/admin', adminBossRoutes)
+app.use('/api/admin/boss', bossSettingsRoutes)
 app.use('/api/boss', bossRoutes)
 app.use('/api/equipment', equipmentRoutes)
 
@@ -378,6 +381,17 @@ server.listen(PORT, async () => {
   try {
     await prisma.$connect()
     console.log('資料庫連接成功')
+    
+    // 啟動Boss自動切換定時任務 (每30分鐘檢查一次)
+    setInterval(async () => {
+      try {
+        await checkAndSwitchBoss()
+      } catch (error) {
+        console.error('Boss自動切換檢查失敗:', error)
+      }
+    }, 30 * 60 * 1000) // 30分鐘
+    
+    console.log('🤖 Boss自動切換定時任務已啟動 (每30分鐘檢查)')
   } catch (error) {
     console.error('資料庫連接失敗:', error)
   }
