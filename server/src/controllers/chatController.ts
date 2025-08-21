@@ -46,7 +46,7 @@ export const getChatMessages = async (req: Request, res: Response): Promise<void
 export const sendChatMessage = async (req: Request, res: Response): Promise<void> => {
   try {
     const { content } = req.body
-    const userId = req.user?.id
+    const userId = (req as any).userId
 
     if (!userId) {
       res.status(401).json({ success: false, error: '未授權' })
@@ -157,6 +157,7 @@ export const sendSystemMessage = async (content: string, messageType: ChatMessag
     return systemMessage
   } catch (error) {
     console.error('發送系統消息失敗:', error)
+    return null
   }
 }
 
@@ -164,7 +165,7 @@ export const sendSystemMessage = async (content: string, messageType: ChatMessag
 export const deleteChatMessage = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const adminUserId = req.user?.id
+    const adminUserId = (req as any).userId
 
     if (!adminUserId) {
       res.status(401).json({ success: false, error: '未授權' })
