@@ -24,9 +24,12 @@ import {
   Grid,
   Card,
   CardContent,
-  Divider
+  Divider,
+  IconButton
 } from '@mui/material'
-import { Add, Refresh, PlayArrow } from '@mui/icons-material'
+import { Add, Refresh, PlayArrow, Edit, Delete, Settings } from '@mui/icons-material'
+import BossEditor from './BossEditor'
+import BossSettings from './BossSettings'
 
 interface Boss {
   id: string
@@ -40,6 +43,7 @@ interface Boss {
   goldReward: number
   expReward: number
   rarity: string
+  itemDrops?: any[]
 }
 
 interface BossInstance {
@@ -80,6 +84,9 @@ export default function BossManagement() {
   const [createInstanceDialog, setCreateInstanceDialog] = useState(false)
   const [selectedBossId, setSelectedBossId] = useState('')
   const [instanceDuration, setInstanceDuration] = useState(24)
+  const [showEditor, setShowEditor] = useState(false)
+  const [editingBossId, setEditingBossId] = useState<string | undefined>(undefined)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     fetchBosses()
@@ -192,6 +199,58 @@ export default function BossManagement() {
     }
   }
 
+  const handleDeleteBoss = async (bossId: string) => {
+    if (!confirm('確定要刪除這個Boss嗎？這將同時刪除所有相關實例和記錄。')) return
+
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('admin_token')
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/bosses/${bossId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage('Boss刪除成功！')
+        fetchBosses()
+      } else {
+        setMessage(data.error || 'Boss刪除失敗')
+      }
+    } catch (error) {
+      console.error('Boss刪除失敗:', error)
+      setMessage('Boss刪除失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateBoss = () => {
+    setEditingBossId(undefined)
+    setShowEditor(true)
+  }
+
+  const handleEditBoss = (bossId: string) => {
+    setEditingBossId(bossId)
+    setShowEditor(true)
+  }
+
+  const handleEditorSave = () => {
+    setShowEditor(false)
+    setEditingBossId(undefined)
+    fetchBosses()
+    setMessage('Boss保存成功！')
+  }
+
+  const handleEditorCancel = () => {
+    setShowEditor(false)
+    setEditingBossId(undefined)
+  }
+
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('zh-TW')
   }
@@ -209,6 +268,32 @@ export default function BossManagement() {
     return `${hours}小時 ${minutes}分鐘`
   }
 
+  if (showSettings) {
+    return (
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Button 
+            onClick={() => setShowSettings(false)}
+            sx={{ mr: 2 }}
+          >
+            ← 返回Boss管理
+          </Button>
+        </Box>
+        <BossSettings />
+      </Box>
+    )
+  }
+
+  if (showEditor) {
+    return (
+      <BossEditor
+        bossId={editingBossId}
+        onSave={handleEditorSave}
+        onCancel={handleEditorCancel}
+      />
+    )
+  }
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -218,11 +303,27 @@ export default function BossManagement() {
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
+            startIcon={<Settings />}
+            onClick={() => setShowSettings(true)}
+            disabled={loading}
+          >
+            Boss設置
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<Refresh />}
             onClick={handleInitBosses}
             disabled={loading}
           >
             初始化預設 Boss
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleCreateBoss}
+            disabled={loading}
+          >
+            創建新 Boss
           </Button>
           <Button
             variant="contained"
@@ -307,6 +408,7 @@ export default function BossManagement() {
               <TableCell>攻擊/防禦</TableCell>
               <TableCell>弱點技能</TableCell>
               <TableCell>獎勵</TableCell>
+              <TableCell>操作</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -319,6 +421,11 @@ export default function BossManagement() {
                   <Typography variant="caption" color="text.secondary">
                     {boss.description}
                   </Typography>
+                  {boss.itemDrops && boss.itemDrops.length > 0 && (
+                    <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 0.5 }}>
+                      🎁 {boss.itemDrops.length} 種掉落物品
+                    </Typography>
+                  )}
                 </TableCell>
                 <TableCell>{boss.level}</TableCell>
                 <TableCell>
@@ -354,6 +461,26 @@ export default function BossManagement() {
                   <Typography variant="body2">
                     經驗: {boss.expReward}
                   </Typography>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => handleEditBoss(boss.id)}
+                      disabled={loading}
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteBoss(boss.id)}
+                      disabled={loading}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
