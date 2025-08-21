@@ -1,7 +1,7 @@
 import express from 'express'
-import { authenticateToken } from '../middleware/auth'
-import { authenticateAdmin } from '../middleware/adminAuth'
-import { getChatMessages, sendChatMessage, deleteChatMessage } from '../controllers/chatController'
+import { authenticateToken } from '../middleware/auth.js'
+import { authenticateAdmin } from '../middleware/adminAuth.js'
+import { getChatMessages, sendChatMessage, deleteChatMessage } from '../controllers/chatController.js'
 
 const router = express.Router()
 
