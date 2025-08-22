@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && npx prisma generate",
-    "start": "npx prisma db push --accept-data-loss --skip-generate && node dist/index.js",
+    "start": "(npx prisma db push --accept-data-loss --skip-generate || echo 'Database sync failed, starting server anyway') && node dist/index.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

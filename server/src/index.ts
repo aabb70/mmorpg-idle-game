@@ -380,14 +380,33 @@ io.on('connection', (socket) => {
 })
 
 // 啟動服務器
+// 數據庫連接重試函數
+async function connectWithRetry(maxRetries = 5, delay = 2000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await prisma.$connect()
+      console.log('資料庫連接成功')
+      return true
+    } catch (error) {
+      console.log(`資料庫連接嘗試 ${i + 1}/${maxRetries} 失敗:`, error instanceof Error ? error.message : error)
+      if (i < maxRetries - 1) {
+        console.log(`等待 ${delay}ms 後重試...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay *= 1.5 // 指數退避
+      }
+    }
+  }
+  console.error('資料庫連接失敗，服務器將繼續運行但功能可能受限')
+  return false
+}
+
 server.listen(PORT, async () => {
   console.log(`🚀 服務器運行在 http://localhost:${PORT}`)
   
-  // 檢查資料庫連接
-  try {
-    await prisma.$connect()
-    console.log('資料庫連接成功')
-    
+  // 嘗試連接資料庫（Neon 免費計劃可能需要時間喚醒）
+  const dbConnected = await connectWithRetry()
+  
+  if (dbConnected) {
     // 啟動Boss自動切換定時任務 (每30分鐘檢查一次)
     setInterval(async () => {
       try {
@@ -398,8 +417,6 @@ server.listen(PORT, async () => {
     }, 30 * 60 * 1000) // 30分鐘
     
     console.log('🤖 Boss自動切換定時任務已啟動 (每30分鐘檢查)')
-  } catch (error) {
-    console.error('資料庫連接失敗:', error)
   }
 })
 
