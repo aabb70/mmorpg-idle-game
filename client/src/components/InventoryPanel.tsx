@@ -291,6 +291,11 @@ export default function InventoryPanel() {
                           類型：{item.itemType}
                           {item.category && ` (${item.category})`}
                         </Typography>
+                        {item.description && (
+                          <Typography variant="body2" sx={{ mb: 1, fontStyle: 'italic', color: 'text.primary' }}>
+                            📄 {item.description}
+                          </Typography>
+                        )}
                         {item.tags && item.tags.length > 0 && (
                           <Box sx={{ mb: 1 }}>
                             {item.tags.map((tag: any, index: number) => (

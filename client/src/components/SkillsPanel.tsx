@@ -107,6 +107,18 @@ interface Item {
   maxSuccessRate?: number
   minSkillLevel?: number
   maxSkillLevel?: number
+  skillLevel?: number
+  ingredients?: {
+    quantity: number
+    item?: {
+      name: string
+      tags?: string[]
+    }
+    tag?: {
+      name: string
+    }
+    category?: string
+  }[]
 }
 
 interface OfflineTraining {
@@ -413,17 +425,41 @@ export default function SkillsPanel() {
               >
                 {availableItems.map((item) => (
                   <MenuItem key={item.id} value={item.id}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={rarityNames[item.rarity as keyof typeof rarityNames] || '普通'}
-                        size="small"
-                        sx={{
-                          backgroundColor: rarityColors[item.rarity as keyof typeof rarityColors],
-                          color: 'white',
-                          fontSize: '0.7rem'
-                        }}
-                      />
-                      {item.name}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Chip
+                          label={rarityNames[item.rarity as keyof typeof rarityNames] || '普通'}
+                          size="small"
+                          sx={{
+                            backgroundColor: rarityColors[item.rarity as keyof typeof rarityColors],
+                            color: 'white',
+                            fontSize: '0.7rem'
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {item.name}
+                        </Typography>
+                        {item.skillLevel && (
+                          <Chip
+                            label={`需要等級 ${item.skillLevel}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: '0.6rem' }}
+                          />
+                        )}
+                      </Box>
+                      {item.description && (
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+                          {item.description}
+                        </Typography>
+                      )}
+                      {item.ingredients && item.ingredients.length > 0 && (
+                        <Typography variant="caption" sx={{ color: 'primary.main', fontSize: '0.7rem' }}>
+                          材料：{item.ingredients.map(ing => 
+                            `${ing.item?.name || ing.tag?.name || ing.category} ×${ing.quantity}`
+                          ).join(', ')}
+                        </Typography>
+                      )}
                     </Box>
                   </MenuItem>
                 ))}
@@ -484,9 +520,31 @@ export default function SkillsPanel() {
 
                         return (
                           <>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
                               🎯 目標：{item.name}
                             </Typography>
+                            
+                            {/* 物品描述 */}
+                            {item.description && (
+                              <Typography variant="body2" sx={{ mb: 1, fontStyle: 'italic', color: 'text.secondary' }}>
+                                📄 {item.description}
+                              </Typography>
+                            )}
+
+                            {/* 製作配方材料 */}
+                            {item.ingredients && item.ingredients.length > 0 && (
+                              <Box sx={{ mb: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                  🧪 所需材料：
+                                </Typography>
+                                {item.ingredients.map((ingredient, index) => (
+                                  <Typography key={index} variant="body2" sx={{ ml: 1, fontSize: '0.85rem' }}>
+                                    • {ingredient.item?.name || ingredient.tag?.name || ingredient.category} × {ingredient.quantity}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            )}
+
                             <Typography variant="body2" sx={{ mb: 1 }}>
                               📈 成功率：{Math.round(successRate * 100)}%
                             </Typography>
