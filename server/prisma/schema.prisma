@@ -194,6 +194,11 @@ model PurchaseOrder {
   @@map("purchase_orders")
 }
 
+enum TrainingMode {
+  AUTO_STOP   // 達到指定次數自動停止
+  CONTINUOUS  // 持續訓練直到手動停止
+}
+
 model OfflineTraining {
   id           String   @id @default(cuid())
   userId       String   @unique
@@ -203,8 +208,10 @@ model OfflineTraining {
   targetItemId String
   targetItem   Item     @relation(fields: [targetItemId], references: [id])
   
-  repetitions  Int      // 要執行的次數
+  repetitions  Int      // 要執行的次數 (CONTINUOUS模式下為-1)
   completed    Int      @default(0) // 已完成的次數
+  
+  trainingMode TrainingMode @default(AUTO_STOP) // 訓練模式
   
   startTime    DateTime @default(now())
   lastUpdate   DateTime @default(now())

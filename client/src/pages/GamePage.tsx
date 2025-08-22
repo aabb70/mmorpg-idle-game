@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   AppBar,
@@ -31,6 +31,7 @@ export default function GamePage() {
   const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
   const { currentView } = useSelector((state: RootState) => state.game)
+  const dataLoadedRef = useRef(false)
 
   useEffect(() => {
     console.log('GamePage useEffect 觸發，用戶狀態:', user)
@@ -56,8 +57,10 @@ export default function GamePage() {
       }
     }
     
-    if (user) {
+    if (user && !dataLoadedRef.current) {
       console.log('用戶已登入，開始載入資料')
+      dataLoadedRef.current = true
+      
       // 載入用戶完整資料
       loadUserData()
       
@@ -130,6 +133,9 @@ export default function GamePage() {
 
   const handleLogout = () => {
     console.log('開始登出流程')
+    
+    // 重置資料載入狀態
+    dataLoadedRef.current = false
     
     // 清除 API 客戶端 token
     import('../utils/api').then(({ apiClient }) => {

@@ -131,17 +131,18 @@ export const getRecipes = async (req: Request, res: Response): Promise<void> => 
 export const startTargetedTraining = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId
-    const { skillType, targetItemId, repetitions } = req.body
+    const { skillType, targetItemId, repetitions, trainingMode = 'AUTO_STOP' } = req.body
 
     console.log('=== 開始目標訓練 ===')
     console.log('userId:', userId)
     console.log('skillType:', skillType)
     console.log('targetItemId:', targetItemId)
     console.log('repetitions:', repetitions)
+    console.log('trainingMode:', trainingMode)
 
-    if (!skillType || !targetItemId || !repetitions) {
+    if (!skillType || !targetItemId || (trainingMode === 'AUTO_STOP' && !repetitions)) {
       console.log('❌ 參數不完整')
-      res.status(400).json({ message: '需要指定技能類型、目標物品和重複次數' })
+      res.status(400).json({ message: '需要指定技能類型、目標物品' + (trainingMode === 'AUTO_STOP' ? '和重複次數' : '') })
       return
     }
 
@@ -204,12 +205,15 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     
     console.log('存儲訓練記錄 - 實際物品ID:', actualTargetItemId, '物品名稱:', targetItem.name)
     
+    const finalRepetitions = trainingMode === 'CONTINUOUS' ? -1 : repetitions
+    
     const offlineTraining = await prisma.offlineTraining.upsert({
       where: { userId },
       update: {
         skillType,
         targetItemId: actualTargetItemId,
-        repetitions,
+        repetitions: finalRepetitions,
+        trainingMode,
         completed: 0,
         startTime: new Date(),
         lastUpdate: new Date(),
@@ -219,7 +223,8 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
         userId,
         skillType,
         targetItemId: actualTargetItemId,
-        repetitions,
+        repetitions: finalRepetitions,
+        trainingMode,
         completed: 0,
         startTime: new Date(),
         lastUpdate: new Date(),
@@ -231,6 +236,7 @@ export const startTargetedTraining = async (req: Request, res: Response): Promis
     })
 
     res.json({
+      success: true,
       message: '目標訓練已開始',
       training: offlineTraining
     })
@@ -533,18 +539,36 @@ async function calculateOfflineProgress(userId: string, training: any) {
     successfulAttempts = Math.floor(attemptsPossible * actualSuccessRate)
   }
 
-  const newCompleted = Math.min(training.completed + successfulAttempts, training.repetitions)
+  // 計算新的完成數量，根據訓練模式處理
+  let newCompleted
+  let shouldAutoStop = false
+  
+  if (training.trainingMode === 'CONTINUOUS') {
+    // 連續模式：不限制完成次數
+    newCompleted = training.completed + successfulAttempts
+  } else {
+    // 自動停止模式：限制在目標次數內
+    newCompleted = Math.min(training.completed + successfulAttempts, training.repetitions)
+    shouldAutoStop = newCompleted >= training.repetitions
+  }
 
   // 如果有新的成功嘗試，更新資料庫
   if (successfulAttempts > 0) {
     await prisma.$transaction(async (tx) => {
       // 更新離線訓練進度
+      const updateData: any = {
+        completed: newCompleted,
+        lastUpdate: now
+      }
+      
+      // 如果達到目標且是自動停止模式，停止訓練
+      if (shouldAutoStop) {
+        updateData.isActive = false
+      }
+      
       await tx.offlineTraining.update({
         where: { userId },
-        data: {
-          completed: newCompleted,
-          lastUpdate: now
-        }
+        data: updateData
       })
 
       // 添加物品到背包（只有採集職業或製作職業都會獲得物品）
@@ -631,7 +655,8 @@ async function calculateOfflineProgress(userId: string, training: any) {
     totalCompleted: newCompleted,
     itemsGained: successfulAttempts,
     expGained: successfulAttempts * 10,
-    isCompleted: newCompleted >= training.repetitions
+    isCompleted: training.trainingMode === 'AUTO_STOP' ? shouldAutoStop : false,
+    autoStopped: shouldAutoStop
   }
 }
 

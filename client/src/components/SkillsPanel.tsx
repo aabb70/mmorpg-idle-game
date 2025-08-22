@@ -22,6 +22,10 @@ import {
   DialogActions,
   IconButton,
   Avatar,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormLabel,
 } from '@mui/material'
 import { 
   ArrowBack, 
@@ -113,6 +117,7 @@ interface OfflineTraining {
   completed: number
   startTime: string
   isActive: boolean
+  trainingMode?: string
 }
 
 export default function SkillsPanel() {
@@ -124,6 +129,7 @@ export default function SkillsPanel() {
   const [availableItems, setAvailableItems] = useState<Item[]>([])
   const [selectedItem, setSelectedItem] = useState<string>('')
   const [repetitions, setRepetitions] = useState<number>(10)
+  const [trainingMode, setTrainingMode] = useState<'AUTO_STOP' | 'CONTINUOUS'>('AUTO_STOP')
   const [currentTraining, setCurrentTraining] = useState<OfflineTraining | null>(null)
   const [isTargetTrainingLoading, setIsTargetTrainingLoading] = useState(false)
   const [showStartDialog, setShowStartDialog] = useState(false)
@@ -176,8 +182,8 @@ export default function SkillsPanel() {
   }
 
   const handleStartTargetedTraining = async () => {
-    if (!selectedSkill || !selectedItem || repetitions <= 0) {
-      dispatch(addNotification('請選擇技能、目標物品和重複次數'))
+    if (!selectedSkill || !selectedItem || (trainingMode === 'AUTO_STOP' && repetitions <= 0)) {
+      dispatch(addNotification('請選擇技能、目標物品' + (trainingMode === 'AUTO_STOP' ? '和重複次數' : '')))
       return
     }
 
@@ -186,7 +192,8 @@ export default function SkillsPanel() {
       const response = await apiClient.startTargetedTraining({
         skillType: selectedSkill as string,
         targetItemId: selectedItem,
-        repetitions
+        repetitions,
+        trainingMode
       })
 
       if (response.success) {
@@ -208,7 +215,7 @@ export default function SkillsPanel() {
 
   const handleCancelTraining = async () => {
     try {
-      const response = await apiClient.cancelTargetedTraining()
+      const response = await apiClient.stopTargetedTraining()
       if (response.success) {
         dispatch(addNotification('已取消專注練習'))
         setCurrentTraining(null)
@@ -430,8 +437,29 @@ export default function SkillsPanel() {
               value={repetitions}
               onChange={(e) => setRepetitions(parseInt(e.target.value) || 1)}
               inputProps={{ min: 1, max: 1000 }}
+              disabled={trainingMode === 'CONTINUOUS'}
               sx={{ mb: 3 }}
             />
+
+            <FormControl component="fieldset" sx={{ mb: 3 }}>
+              <FormLabel component="legend">訓練模式</FormLabel>
+              <RadioGroup
+                value={trainingMode}
+                onChange={(e) => setTrainingMode(e.target.value as 'AUTO_STOP' | 'CONTINUOUS')}
+                row
+              >
+                <FormControlLabel 
+                  value="AUTO_STOP" 
+                  control={<Radio />} 
+                  label="🎯 指定次數 (自動停止)" 
+                />
+                <FormControlLabel 
+                  value="CONTINUOUS" 
+                  control={<Radio />} 
+                  label="🔄 持續訓練 (手動停止)" 
+                />
+              </RadioGroup>
+            </FormControl>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -466,10 +494,18 @@ export default function SkillsPanel() {
                               ⏱️ 每次：{trainingTime} 秒
                             </Typography>
                             <Typography variant="body2" sx={{ mb: 1 }}>
-                              🎁 預期收穫：約 {expectedItems} 個
+                              {trainingMode === 'AUTO_STOP' ? (
+                                <>🎁 預期收穫：約 {expectedItems} 個</>
+                              ) : (
+                                <>🔄 持續訓練：每 {trainingTime} 秒獲得 1 個</>
+                              )}
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                              ⏰ 總時間：{Math.floor(totalTime / 60)} 分 {Math.round(totalTime % 60)} 秒
+                              {trainingMode === 'AUTO_STOP' ? (
+                                <>⏰ 總時間：{Math.floor(totalTime / 60)} 分 {Math.round(totalTime % 60)} 秒</>
+                              ) : (
+                                <>♾️ 模式：持續訓練直到手動停止</>
+                              )}
                             </Typography>
                           </>
                         )
@@ -529,10 +565,14 @@ export default function SkillsPanel() {
             {skillNames[currentTraining.skillType as SkillType]} → {currentTraining.targetItem.name}
           </Typography>
           <Typography variant="body2">
-            進度：{currentTraining.completed}/{currentTraining.repetitions}
-            {progress && ` (${Math.round((currentTraining.completed / currentTraining.repetitions) * 100)}%)`}
+            {currentTraining.trainingMode === 'CONTINUOUS' ? (
+              <>已完成：{currentTraining.completed} 次</>
+            ) : (
+              <>進度：{currentTraining.completed}/{currentTraining.repetitions}
+              {progress && ` (${Math.round((currentTraining.completed / currentTraining.repetitions) * 100)}%)`}</>
+            )}
           </Typography>
-          {progress && (
+          {progress && currentTraining.trainingMode !== 'CONTINUOUS' && (
             <LinearProgress
               variant="determinate"
               value={(currentTraining.completed / currentTraining.repetitions) * 100}
@@ -555,7 +595,15 @@ export default function SkillsPanel() {
             確定要開始專注練習嗎？
           </Typography>
           {selectedItem && selectedSkill && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Box sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: 'rgba(255, 255, 255, 0.05)', 
+              borderRadius: 1, 
+              border: '1px solid', 
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)'
+            }}>
               {(() => {
                 const item = availableItems.find(item => item.id === selectedItem)
                 if (!item) return null
@@ -566,17 +614,25 @@ export default function SkillsPanel() {
 
                 return (
                   <>
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ color: '#ffffff', mb: 1, fontWeight: 500 }}>
                       🛠️ 技能：{skillNames[selectedSkill]} (等級 {skillLevel})
                     </Typography>
-                    <Typography variant="body2">
-                      🎯 目標：{item.name} × {repetitions}
+                    <Typography variant="body2" sx={{ color: '#ffffff', mb: 1, fontWeight: 500 }}>
+                      {trainingMode === 'AUTO_STOP' ? (
+                        <>🎯 目標：{item.name} × {repetitions}</>
+                      ) : (
+                        <>🎯 目標：{item.name} (持續訓練)</>
+                      )}
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ color: '#ffffff', mb: 1, fontWeight: 500 }}>
                       📈 成功率：{Math.round(successRate * 100)}%
                     </Typography>
-                    <Typography variant="body2">
-                      🎁 預期收穫：約 {expectedItems} 個
+                    <Typography variant="body2" sx={{ color: '#ffffff', mb: 1, fontWeight: 500 }}>
+                      {trainingMode === 'AUTO_STOP' ? (
+                        <>🎁 預期收穫：約 {expectedItems} 個</>
+                      ) : (
+                        <>🔄 模式：持續訓練直到手動停止</>
+                      )}
                     </Typography>
                   </>
                 )

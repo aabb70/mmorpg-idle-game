@@ -123,7 +123,7 @@ class ApiClient {
     return this.request(`/game/available-items/${skillType}`)
   }
 
-  async startTargetedTraining(trainingData: { skillType: string; targetItemId: string; repetitions: number }) {
+  async startTargetedTraining(trainingData: { skillType: string; targetItemId: string; repetitions: number; trainingMode?: string }) {
     return this.request('/game/start-targeted-training', {
       method: 'POST',
       body: JSON.stringify(trainingData),
