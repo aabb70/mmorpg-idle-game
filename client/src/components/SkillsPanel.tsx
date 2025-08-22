@@ -164,7 +164,7 @@ export default function SkillsPanel() {
     try {
       setIsTargetTrainingLoading(true)
       console.log('載入技能物品:', selectedSkill)
-      const response = await apiClient.getSkillItems(selectedSkill)
+      const response = await apiClient.getAvailableItems(selectedSkill)
       console.log('API 回應:', response)
       setAvailableItems(response.items || [])
     } catch (error) {
